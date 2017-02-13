@@ -1,0 +1,50 @@
+//GPIOInt.c
+#include "GPIOInt.h"
+#include "tm4c123gh6pm.h"
+
+/*void Enable_IRQ(void) {
+	int R2;
+	__asm {MOV R2, 0x0
+	;MSR BASEPRI, R2 
+	;CPSIE I}
+}*/
+
+int main (void){
+	volatile uint32_t RCC;
+	
+	RCC = (SYSCTL_RCC_XTAL_16MHZ|SYSCTL_RCC_USESYSDIV| SYSCTL_RCC_SYSDIV_10);
+	SYSCTL_RCC_R = RCC;
+	
+	SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOB | SYSCTL_RCGC2_GPIOD; //Enable PORT B & D in RCGC2
+	GPIO_PORTB_DIR_R = 0x01;																	//set PB0 as output pin
+	GPIO_PORTB_DEN_R = 0x01;																	//enable PB0 as digital function
+	GPIO_PORTD_DIR_R = ~0x08;																	//set PD3 as Input pin
+	GPIO_PORTD_DEN_R = 0x08;																	//enable PD3 as digital function 
+	GPIO_PORTD_IS_R  = 0x08;																	//enable PD2 is level-triggered interrupt
+	GPIO_PORTD_IBE_R = 0x00;																	//disable PD3 IBE function
+	GPIO_PORTD_IEV_R = 0x08;																	//enable PD3 High level/Rising edge
+	GPIO_PORTD_ICR_R = 0x08;																	//clear PD3 for any previous interrupt
+	GPIO_PORTD_IM_R  = 0x08;																	//enable(unmask) PD3 interrupt
+	
+	NVIC_PRI0_R  = 0x60000000;																//NVIC->IP[3] = 0x60; or NVIC->[3] = 6 << 28;priority = 3
+	NVIC_EN0_R   = 0x08;																			//NVIC->ISER[0] = 0x00000009; enable IRQ3
+	//Enable_IRQ();																						  //__enable_irq(); global enable IRQs
+	__enable_irq();																											
+	while (1)																									
+		GPIO_PORTB_DATA_R = 0x00;																//wait for PD3 interrupt/set PB0 to LOW to turn off LED
+	
+}
+	
+	void GPIOD_Handler(void) {															  //ISR for PD3 interrupt
+		GPIO_PORTB_DATA_R = 0x01;																//set PB0 to HIGH to turn on LED PB0
+}
+
+//GPIOInt.h
+#include <stdint.h>
+#include <stdbool.h>
+
+#define SYSCTL_RCC_XTAL_16MHZ		0x00000540
+#define SYSCTL_RCC_USESYSDIV		0x00400000
+#define SYSCTL_RCC_SYSDIV_10		0X04C00000
+#define SYSCTL_RCGC2_GPIOB			0x00000002
+#define SYSCTL_RCGC2_GPIOD			0x00000008
