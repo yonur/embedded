@@ -1,3 +1,10 @@
+/*
+Target klasöründe sağ tık "Options for Target 'Target x'" seç. C/C++ sekmesinde Define kutucuğuna "PART_TM4C123GH6PM TARGET_IS_BLIZZARD_RA1"
+yapıştır. Include Paths bölümüne de "C:\ti\TivaWare_C_Series-2.1.4.178" dizinini ekle. "Source Group x" klasöründe sağ tıkla
+"Add Existing Files to Group Source Group x" seç ve include ile eklediğimiz fonksiyonları ekle(C'nin kendi stdint gibi fonksiyonları
+hariç. Ayrıca "C:\ti\TivaWare_C_Series-2.1.4.178\driverlib\rvmdk" dizinindeki driverlib.lib paketini de ekle.
+*/
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
