@@ -1,0 +1,432 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "inc/hw_memmap.h"
+#include "inc/hw_ints.h"
+#include "inc/hw_types.h"
+#include "inc/hw_nvic.h"
+#include "inc/hw_gpio.h"
+#include "driverlib/gpio.c"
+#include "driverlib/systick.h"
+#include "driverlib/rom.h"
+#include "grlib/grlib.h"
+#include "utils/uartstdio.h"
+#include "driverlib/timer.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/gpio.h"
+#include "driverlib/uart.h"
+#include "driverlib/interrupt.h"
+#include "driverlib/pin_map.h"
+
+#define SYSCTL_RCGC1_R          (*((volatile uint32_t *)0x400FE104))
+#define SYSCTL_RCGC2_R          (*((volatile uint32_t *)0x400FE108))
+	
+int Start_flagB = 0;
+int Lead_Lag_FlagRB = 0;
+uint32_t DeltaT_RB = 0;
+uint32_t Phase_offset_RB = 0;
+uint32_t PeriodB = 0;
+int statusRB = 0;
+
+int Start_flagY = 0;
+int Lead_Lag_FlagBY = 0;
+uint32_t DeltaT_BY = 0;
+uint32_t Phase_offset_BY = 0;
+uint32_t PeriodY = 0;
+int statusBY = 0;
+
+int Start_flagR = 0;
+int Lead_Lag_FlagYR = 0;
+uint32_t DeltaT_YR = 0;
+uint32_t Phase_offset_YR = 0;
+uint32_t PeriodR = 0;
+int statusYR = 0;
+
+/*Check if Driver Library Encounters an error */
+#ifdef DEBUG
+void
+__error__(char *pcFilename, uint32_t ui32Line)
+{
+}
+#endif
+
+/*Functions*/
+extern void IntHandler_PhaseRB(void);
+extern void IntHandler_PhaseBY(void);
+extern void IntHandler_PhaseYR(void);
+extern void IntHandler_PeriodR(void);
+extern void IntHandler_PeriodB(void);
+extern void IntHandler_PeriodY(void);
+void System_Init();
+
+void IntHandler_PhaseRB()
+{
+		/*Clear Interrupt*/
+		statusRB = GPIOIntStatus(GPIO_PORTC_BASE,true);
+		GPIOIntClear(GPIO_PORTC_BASE,statusRB);
+
+		if (GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_7) == 128) //Check if it was a rising edge.
+		{
+
+			TimerEnable(TIMER0_BASE, TIMER_A); //If it was a rising edge, start timer.
+
+		}
+
+		else //If falling edge, perform measurment.
+		{
+
+			/*Calculate DeltaT*/
+			DeltaT_RB = (65535 - TimerValueGet(TIMER0_BASE, TIMER_A));
+
+			/*Reset and Reload Timer*/
+			TimerDisable(TIMER0_BASE, TIMER_A);
+			SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+			TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_ONE_SHOT);
+			TimerLoadSet(TIMER0_BASE, TIMER_A, 65535);
+
+		}
+
+}
+
+void IntHandler_PeriodB()
+{
+	//Clear Interrupt
+  statusRB = GPIOIntStatus(GPIO_PORTD_BASE,true);
+	GPIOIntClear(GPIO_PORTD_BASE,statusRB);
+
+	/*check to see if this is the first falling edge of the program */
+	if (Start_flagB ==  0)
+	{
+		Start_flagB = 1;
+	    TimerEnable(TIMER1_BASE, TIMER_B);
+	}
+
+	else
+	{
+		/*Measure Period and calculate Phase Offset */
+		PeriodB = 65535-TimerValueGet(TIMER1_BASE, TIMER_B);
+		Phase_offset_RB = (((DeltaT_RB * 10000)/(PeriodB)) * 360u )/10000;
+
+		/*Reset, Reload and Re-Enable Timer */
+		TimerDisable(TIMER1_BASE, TIMER_B);
+		SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
+		TimerConfigure(TIMER1_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_B_ONE_SHOT);
+	  TimerLoadSet(TIMER1_BASE, TIMER_B, 65535);
+	  TimerEnable(TIMER1_BASE, TIMER_B);
+
+	}
+
+	if (GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_7) == 128)//Check if XOR output is High
+		{
+			Lead_Lag_FlagRB = 1;
+		}
+	else
+		{
+			Lead_Lag_FlagRB = 0;
+		}
+
+}
+
+void IntHandler_PhaseBY()
+{
+		/*Clear Interrupt*/
+		statusBY = GPIOIntStatus(GPIO_PORTB_BASE,true);
+		GPIOIntClear(GPIO_PORTB_BASE,statusBY);
+
+		if (GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_7) == 128) //Check if it was a rising edge.
+		{
+
+			TimerEnable(TIMER0_BASE, TIMER_B); //If it was a rising edge, start timer.
+
+		}
+
+		else //If falling edge, perform measurment.
+		{
+
+			/*Calculate DeltaT*/
+			DeltaT_BY = (65535 - TimerValueGet(TIMER0_BASE, TIMER_B));
+
+			/*Reset and Reload Timer*/
+			TimerDisable(TIMER0_BASE, TIMER_B);
+			SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+			TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_B_ONE_SHOT);
+			TimerLoadSet(TIMER0_BASE, TIMER_B, 65535);
+
+
+		}
+
+}
+
+void IntHandler_PeriodY()
+{
+	//Clear Interrupt
+  statusBY = GPIOIntStatus(GPIO_PORTD_BASE,true);
+	GPIOIntClear(GPIO_PORTD_BASE,statusBY);
+
+	/*check to see if this is the first falling edge of the program */
+	if (Start_flagY ==  0)
+	{
+		Start_flagY = 1;
+	    TimerEnable(TIMER2_BASE, TIMER_B);
+	}
+
+	else
+	{
+		/*Measure Period and calculate Phase Offset */
+		PeriodY = 65535-TimerValueGet(TIMER2_BASE, TIMER_B);
+		Phase_offset_BY = (((DeltaT_BY * 10000)/(PeriodY)) * 360u )/10000;
+
+		/*Reset, Reload and Re-Enable Timer */
+		TimerDisable(TIMER2_BASE, TIMER_B);
+		SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
+		TimerConfigure(TIMER2_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_B_ONE_SHOT);
+	  TimerLoadSet(TIMER2_BASE, TIMER_B, 65535);
+	  TimerEnable(TIMER2_BASE, TIMER_B);
+
+	}
+
+	if (GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_7) == 128)//Check if XOR output is High
+		{
+			Lead_Lag_FlagBY = 1;
+		}
+	else
+		{
+			Lead_Lag_FlagBY = 0;
+		}
+
+}
+
+void IntHandler_PhaseYR()
+{
+		/*Clear Interrupt*/
+		statusYR = GPIOIntStatus(GPIO_PORTE_BASE,true);
+		GPIOIntClear(GPIO_PORTE_BASE,statusYR);
+
+		if (GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_7) == 128) //Check if it was a rising edge.
+		{
+
+			TimerEnable(TIMER0_BASE, TIMER_B); //If it was a rising edge, start timer.
+
+		}
+
+		else //If falling edge, perform measurment.
+		{
+
+			/*Calculate DeltaT*/
+			DeltaT_YR = (65535 - TimerValueGet(TIMER0_BASE, TIMER_B));
+
+			/*Reset and Reload Timer*/
+			TimerDisable(TIMER0_BASE, TIMER_B);
+			SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+			TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_B_ONE_SHOT);
+			TimerLoadSet(TIMER0_BASE, TIMER_B, 65535);
+
+		}
+
+}
+
+void IntHandler_PeriodR()
+{
+	//Clear Interrupt
+  statusYR = GPIOIntStatus(GPIO_PORTD_BASE,true);
+	GPIOIntClear(GPIO_PORTD_BASE,statusYR);
+
+	/*check to see if this is the first falling edge of the program */
+	if (Start_flagR ==  0)
+	{
+		Start_flagR = 1;
+	    TimerEnable(TIMER2_BASE, TIMER_A);
+	}
+
+	else
+	{
+		/*Measure Period and calculate Phase Offset */
+		PeriodR = 65535-TimerValueGet(TIMER2_BASE, TIMER_A);
+		Phase_offset_YR = (((DeltaT_YR * 10000)/(PeriodR)) * 360u )/10000;
+
+		/*Reset, Reload and Re-Enable Timer */
+		TimerDisable(TIMER2_BASE, TIMER_A);
+		SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
+		TimerConfigure(TIMER2_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_ONE_SHOT);
+	  TimerLoadSet(TIMER2_BASE, TIMER_A, 65535);
+	  TimerEnable(TIMER2_BASE, TIMER_A);
+
+	}
+
+	if (GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_7) == 128)//Check if XOR output is High
+		{
+			Lead_Lag_FlagYR = 1;
+		}
+	else
+		{
+			Lead_Lag_FlagYR = 0;
+		}
+
+}
+
+void SendUartString(uint32_t nBase, char *nData)
+{
+	while(*nData != '\0')
+	{
+		if(UARTSpaceAvail(nBase))
+		{
+			while(!UARTCharPutNonBlocking(nBase, *nData));
+			nData++;
+		}
+	}
+}
+
+void Configure_UART(void)
+{
+	/*Enable GPIO and UART*/
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
+
+    /*Configure GPIO A0 and A1 as UARTS*/
+    ROM_GPIOPinConfigure(GPIO_PA0_U0RX);
+    ROM_GPIOPinConfigure(GPIO_PA1_U0TX);
+    ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+
+    /*Designate UART Clock Source*/
+    UARTClockSourceSet(UART0_BASE, UART_CLOCK_SYSTEM);
+
+    UARTStdioConfig(0, 115200, 3125000);
+}
+
+int main(void)
+{
+	//SysCtlClockSet(SYSCTL_USE_PLL|SYSCTL_OSC_MAIN|SYSCTL_XTAL_16MHZ|SYSCTL_SYSDIV_5);
+	System_Init();
+
+	 while(1)
+	 {
+		 	if (Lead_Lag_FlagRB == 0)
+		 	{
+				if(Lead_Lag_FlagBY == 0)
+				{
+					UARTprintf("RBY\n"); 
+					UARTprintf("Phase offset = %i R Leading B \n", Phase_offset_RB); //Measured Signal Leading Reference Signal
+					UARTprintf("Phase offset = %i B Leading Y \n", Phase_offset_BY); //Measured Signal Leading Reference Signal
+				}
+				else
+				{
+					if(Lead_Lag_FlagYR == 0)
+					{
+						UARTprintf("YRB\n"); 
+						UARTprintf("Phase offset = %i Y Leading R \n", Phase_offset_YR); //Measured Signal Leading Reference Signal
+						UARTprintf("Phase offset = %i R Leading B \n", Phase_offset_RB); //Measured Signal Leading Reference Signal
+					}
+					else
+					{
+						UARTprintf("RYB\n"); 
+						UARTprintf("Phase offset = %i R Leading Y \n", Phase_offset_RY); //Measured Signal Leading Reference Signal
+						UARTprintf("Phase offset = %i Y Leading B \n", Phase_offset_YB); //Measured Signal Leading Reference Signal
+					}
+				}
+		 	}
+		 	else
+		 	{
+				if(Lead_Lag_FlagBY == 0)
+				{
+					if(Lead_Lag_FlagYR == 0)
+					{
+						UARTprintf("BYR\n"); 
+						UARTprintf("Phase offset = %i B Leading Y \n", Phase_offset_BY); //Measured Signal Leading Reference Signal
+						UARTprintf("Phase offset = %i Y Leading R \n", Phase_offset_YR); //Measured Signal Leading Reference Signal
+					}
+					else
+					{
+						UARTprintf("BRY\n"); 
+						UARTprintf("Phase offset = %i B Leading R \n", Phase_offset_BR); //Measured Signal Leading Reference Signal
+						UARTprintf("Phase offset = %i R Leading Y \n", Phase_offset_RY); //Measured Signal Leading Reference Signal
+					}
+				}
+				else
+				{
+					UARTprintf("YBR\n"); 
+					UARTprintf("Phase offset = %i Y Leading B \n", Phase_offset_YB); //Measured Signal Leading Reference Signal
+					UARTprintf("Phase offset = %i B Leading R \n", Phase_offset_BR); //Measured Signal Leading Reference Signal
+				}
+		 	}
+
+	 }
+
+}
+
+void System_Init()
+{
+		SysCtlClockSet(SYSCTL_SYSDIV_64 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ |
+		                       SYSCTL_OSC_MAIN); //  200 MHz / sysdiv = 3.125 MHZ
+
+		/*Init Port C*/
+		SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+		SysCtlDelay(3);
+		SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
+		SysCtlDelay(3);
+		SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+
+		GPIOPinTypeGPIOInput(GPIO_PORTC_BASE, GPIO_INT_PIN_7);
+		GPIOPadConfigSet(GPIO_PORTC_BASE ,GPIO_INT_PIN_7,GPIO_STRENGTH_2MA,GPIO_PIN_TYPE_STD_WPD);
+		GPIOIntTypeSet(GPIO_PORTC_BASE,GPIO_PIN_7,GPIO_BOTH_EDGES); //Set Interrupt Type on PORT C, pin 7
+				
+		GPIOPinTypeGPIOInput(GPIO_PORTB_BASE, GPIO_INT_PIN_7);
+		GPIOPadConfigSet(GPIO_PORTB_BASE ,GPIO_INT_PIN_7,GPIO_STRENGTH_2MA,GPIO_PIN_TYPE_STD_WPD);
+		GPIOIntTypeSet(GPIO_PORTB_BASE,GPIO_PIN_7,GPIO_BOTH_EDGES); //Set Interrupt Type on PORT B, pin 7
+		
+		GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_INT_PIN_7);
+		GPIOPadConfigSet(GPIO_PORTE_BASE ,GPIO_INT_PIN_7,GPIO_STRENGTH_2MA,GPIO_PIN_TYPE_STD_WPD);
+		GPIOIntTypeSet(GPIO_PORTE_BASE,GPIO_PIN_7,GPIO_BOTH_EDGES); //Set Interrupt Type on PORT B, pin 7
+		
+		/*Init Port D*/
+		SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+		SysCtlDelay(3);
+
+		GPIOPinTypeGPIOInput(GPIO_PORTD_BASE, GPIO_INT_PIN_1|GPIO_INT_PIN_2|GPIO_INT_PIN_3);
+		GPIOPadConfigSet(GPIO_PORTD_BASE ,GPIO_INT_PIN_1|GPIO_INT_PIN_2|GPIO_INT_PIN_3,GPIO_STRENGTH_2MA,GPIO_PIN_TYPE_STD_WPD);
+		GPIOIntTypeSet(GPIO_PORTD_BASE,GPIO_PIN_1|GPIO_INT_PIN_2|GPIO_INT_PIN_3,GPIO_RISING_EDGE);//Set Interrupt Type on PORT D, pin 1
+		
+		/*Register Interrupts*/
+		GPIOIntRegister(GPIO_PORTC_BASE,IntHandler_PhaseRB);
+		GPIOIntRegister(GPIO_PORTB_BASE,IntHandler_PhaseBY);
+		GPIOIntRegister(GPIO_PORTA_BASE,IntHandler_PhaseYR);
+		
+		GPIOIntRegister(GPIO_PORTD_BASE,IntHandler_PeriodB);
+		GPIOIntRegister(GPIO_PORTD_BASE,IntHandler_PeriodY);
+		GPIOIntRegister(GPIO_PORTD_BASE,IntHandler_PeriodR);
+
+		/*Configure UART */
+		Configure_UART();
+
+		/*Configure Timers*/
+		SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+		SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
+		SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
+		
+		TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_ONE_SHOT);
+		TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_B_ONE_SHOT);
+		TimerConfigure(TIMER1_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_ONE_SHOT);
+		TimerConfigure(TIMER1_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_B_ONE_SHOT);
+		TimerConfigure(TIMER2_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_ONE_SHOT);
+		TimerConfigure(TIMER2_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_B_ONE_SHOT);
+		
+		TimerLoadSet(TIMER0_BASE, TIMER_A, 65535);
+		TimerLoadSet(TIMER0_BASE, TIMER_B, 65535);
+		TimerLoadSet(TIMER1_BASE, TIMER_A, 65535);
+		TimerLoadSet(TIMER1_BASE, TIMER_B, 65535);
+		TimerLoadSet(TIMER2_BASE, TIMER_A, 65535);
+		TimerLoadSet(TIMER2_BASE, TIMER_B, 65535);
+		
+		IntPrioritySet(INT_GPIOC_TM4C123, 0); //Set Period Interrupt at highest priority.
+		IntPrioritySet(INT_GPIOB_TM4C123, 0); //Set Period Interrupt at highest priority.
+		IntPrioritySet(INT_GPIOE_TM4C123, 0); //Set Period Interrupt at highest priority.
+		
+		/*Enable Interrupts*/
+		GPIOIntEnable(GPIO_PORTC_BASE, GPIO_INT_PIN_7);
+		GPIOIntEnable(GPIO_PORTB_BASE, GPIO_INT_PIN_7);
+		GPIOIntEnable(GPIO_PORTE_BASE, GPIO_INT_PIN_7);
+		GPIOIntEnable(GPIO_PORTD_BASE, GPIO_INT_PIN_1);
+		GPIOIntEnable(GPIO_PORTD_BASE, GPIO_INT_PIN_2);
+		GPIOIntEnable(GPIO_PORTD_BASE, GPIO_INT_PIN_3);
+
+}
