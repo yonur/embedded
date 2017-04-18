@@ -320,8 +320,8 @@ int main(void)
 					else
 					{
 						UARTprintf("RYB\n"); 
-						UARTprintf("Phase offset = %i R Leading Y \n", Phase_offset_RY); //Measured Signal Leading Reference Signal
-						UARTprintf("Phase offset = %i Y Leading B \n", Phase_offset_YB); //Measured Signal Leading Reference Signal
+						UARTprintf("Phase offset = %i R Leading Y \n", Phase_offset_YR); //Measured Signal Leading Reference Signal
+						UARTprintf("Phase offset = %i Y Leading B \n", Phase_offset_BY); //Measured Signal Leading Reference Signal
 					}
 				}
 		 	}
@@ -338,15 +338,15 @@ int main(void)
 					else
 					{
 						UARTprintf("BRY\n"); 
-						UARTprintf("Phase offset = %i B Leading R \n", Phase_offset_BR); //Measured Signal Leading Reference Signal
-						UARTprintf("Phase offset = %i R Leading Y \n", Phase_offset_RY); //Measured Signal Leading Reference Signal
+						UARTprintf("Phase offset = %i B Leading R \n", Phase_offset_RB); //Measured Signal Leading Reference Signal
+						UARTprintf("Phase offset = %i R Leading Y \n", Phase_offset_YR); //Measured Signal Leading Reference Signal
 					}
 				}
 				else
 				{
 					UARTprintf("YBR\n"); 
-					UARTprintf("Phase offset = %i Y Leading B \n", Phase_offset_YB); //Measured Signal Leading Reference Signal
-					UARTprintf("Phase offset = %i B Leading R \n", Phase_offset_BR); //Measured Signal Leading Reference Signal
+					UARTprintf("Phase offset = %i Y Leading B \n", Phase_offset_BY); //Measured Signal Leading Reference Signal
+					UARTprintf("Phase offset = %i B Leading R \n", Phase_offset_RB); //Measured Signal Leading Reference Signal
 				}
 		 	}
 
