@@ -1,0 +1,31 @@
+int portinteerupt = 0;
+PA3 = 0;
+
+SoundInit:
+	SysTickHandler etkinleştir.
+PortInterruptInit
+	Port interrupt' ını etkinleştir.
+	
+GPIOPortaHandler:
+	PA2 tetiklendi.
+	portinteerupt = 1;
+
+SysTickHandler:
+	if(portinteerupt == 1)
+		PA3 exorla
+	else
+		PA3 = 0;
+	
+int main(void)
+{
+	SoundInit
+	PortInterruptInit
+	
+	enable_interrupt
+	
+	while(1)
+	{
+		wait_for_interrupt
+	}
+	
+}
