@@ -1,0 +1,111 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include "TM4C123GH6PM.h"
+uint32_t timer0_count = 0, timer1_count = 0, timer2_count = 0, timer3_count = 0;
+
+int main(void)
+{
+	SYSCTL->RCGCTIMER |= 0x0F; //enable timer 0, 1, 2, 3
+	SYSCTL->RCGCGPIO |= 0x2F; //PortA, B, C, D, F activated clock
+	GPIOA->DATA = 0;
+	GPIOA->DEN |= 0x40; //set PB2-PB0 as digital pins
+	GPIOA->DIR |= 0x40; //set PB2-PB0 as output pins
+	GPIOB->DATA = 0;
+	GPIOB->DEN |= 0x40; //set PB2-PB0 as digital pins
+	GPIOB->DIR |= 0x40; //set PB2-PB0 as output pins
+	GPIOC->DATA = 0;
+	GPIOC->DEN |= 0x40; //set PC2-PC0 as digital pins
+	GPIOC->DIR |= 0x40; //set PC2-PC0 as output pins
+	GPIOD->DATA = 0;
+	GPIOD->DEN |= 0x40; //set PD2-PD0 as digital pins
+	GPIOD->DIR |= 0x40; //set PD2-PD0 as output pins
+	GPIOF->DATA = 0;
+	GPIOF->DEN |= 0x0F; //set PF2-PF0 as digital pins
+	GPIOF->DIR |= 0x0F; //set PF2-PF0 as output pins
+		
+	TIMER0->CTL &= ~0x101; //setup süresince Timer0A disable edilir.
+	TIMER0->CFG |= 0x0; //16 bit timer configuration
+	TIMER0->TAMR |= 0x02; //periodic count down mode.
+	TIMER0->TAILR = 48000000;
+	//TIMER0->TAPR = 3; //3 seconds timer0
+	TIMER0->ICR = 0x01;
+	TIMER0->IMR |= 0x01;
+	NVIC->IP[19] = 0x02; //priority level 1
+	NVIC->ISER[0] = 0x80000; // bit 19 is for Timer0A interrupt
+
+	
+	TIMER1->CTL &= ~0x101; //setup süresince Timer1A disable edilir
+	TIMER1->CFG |= 0x0; //16 bit timer configuration
+	TIMER1->TAMR |= 0x02; //periodic count down mode.
+	TIMER1->TAILR = 48000000;
+	//TIMER1->TAPR = 255; //3 seconds timer0
+	TIMER1->ICR = 0x01;
+	TIMER1->IMR |= 0x01;
+	NVIC->IP[21] = 0x04; //priority level 2
+	NVIC->ISER[0] = 0x200000; //bit 21 is for Timer1A interrupt
+	
+	
+	TIMER2->CTL &= ~0x101; //setup süresince Timer2A disable edilir
+	TIMER2->CFG |= 0x0; //16 bit timer configuration
+	TIMER2->TAMR |= 0x02; //periodic count down mode.
+	TIMER2->TAILR = 48000000;
+	//TIMER2->TAPR = 255; //3 seconds timer0
+	TIMER2->ICR = 0x01;
+	TIMER2->IMR |= 0x01;
+	NVIC->IP[23] = 0x06; //priority level 3
+	NVIC->ISER[0] = 0x800000; //bit 23 is for Timer2A interrupt
+	
+	
+	TIMER3->CTL &= ~0x101; //setup süresince Timer3A disable edilir
+	TIMER3->CFG |= 0x0; //16 bit timer configuration
+	TIMER3->TAMR |= 0x02; //periodic count down mode.
+	TIMER3->TAILR = 32000000;
+	//TIMER3->TAPR = 255; //2 seconds timer0
+	TIMER3->ICR = 0x01;
+	TIMER3->IMR |= 0x01;
+	NVIC->IP[35] = 0x00; //priority level 0
+	NVIC->ISER[1] = 0x000008; //bit 35 is for Timer1A interrupt
+	TIMER3->CTL |= 0x101;
+	
+	__enable_irq();
+	do{
+			if(timer3_count > 0)
+			TIMER0->CTL |= 0x101; // enable Timer0A after setup
+		if((timer3_count > 1))
+			TIMER1->CTL |= 0x101;
+		if((timer3_count > 2))
+			TIMER2->CTL |= 0x101;
+	}
+	while(1);
+}
+
+void TIMER0A_Handler(void)
+{
+	TIMER0->ICR = 0x01;
+	GPIOA->DATA ^= 0x40;
+	timer0_count++;
+	
+}
+	
+void TIMER1A_Handler(void)
+{
+	TIMER1->ICR = 0x01;
+	GPIOB->DATA ^= 0x40;
+	timer1_count++;
+	
+}
+	
+void TIMER2A_Handler(void)
+{
+	TIMER2->ICR = 0x01;
+	GPIOC->DATA ^= 0x40;
+	timer2_count++;
+
+}
+	
+void TIMER3A_Handler(void)
+{
+	TIMER3->ICR = 0x01;
+	timer3_count++;
+	GPIOF->DATA ^= 0x0F;
+}
