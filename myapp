@@ -192,3 +192,4 @@ void my_appcall(void)
 	        }
 	    }
 }
+//TCP header(20) ne kadar ? Link level header(14) ne kadar?
