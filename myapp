@@ -1,37 +1,32 @@
+//**********MyApp Header*********************************************************//
+#ifndef __MYAPP_H__
+#define __MYAPP_H__
+
 //*****************************************************************************
-// HTTP server.
-// Adam Dunkels <adam@dunkels.com>
 //
-// Copyright (c) 2001, Adam Dunkels.
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions
-// are met:
-// 1. Redistributions of source code must retain the above copyright
-//    notice, this list of conditions and the following disclaimer.
-// 2. Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in the
-//    documentation and/or other materials provided with the distribution.
-// 3. The name of the author may not be used to endorse or promote
-//    products derived from this software without specific prior
-//    written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
-// OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-// ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-// DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-// GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// This file is part of the uIP TCP/IP stack.
+// Web Server Application Entry Points.
 //
 //*****************************************************************************
+void my_appcall(void);
+void my_init(void);
+
+//*****************************************************************************
+//
+// Web Server Application State Variable Definition.
+//
+//*****************************************************************************
+struct my_state
+{
+    u8_t state; 
+    u16_t count;
+    u16_t bufcount;
+};
+
+#endif // __MYAPP_H__
+//*****************************************************************************//
+
+
+//**********MyApp c file****************************************************//
 
 #include "uip.h"
 #include "myapp.h"
@@ -42,17 +37,17 @@
 //
 //*****************************************************************************
 #define BUF_APPDATA ((u8_t *)uip_appdata)
-
+#define SEND_DATA   ((u8_t *)uip_appdata)
 //*****************************************************************************
 //
 // Definitions of HTTP Server States
 //
 //*****************************************************************************
-#define HTTP_NOGET      0
-#define HTTP_FILE       1
-#define HTTP_TEXT       2
-#define HTTP_FUNC       3
-#define HTTP_END        4
+#define CONNECTED        0
+#define ETH_COR	         1
+#define TEST_START       3
+#define TEST_CONT		 4
+#define END              5
 
 //*****************************************************************************
 //
@@ -101,79 +96,66 @@ void my_appcall(void)
 	                // that we haven't received any HTTP GET request for this
 	                // connection yet.
 	                //
-	                hs->state = HTTP_NOGET;
-	                hs->count = 0;
-	                hs->bufcount = 0;
+	                hs->state = CONNECTED;
 	                return;
 	            }
-	            else if(uip_poll())
+	            else if(uip_poll() && hs->state == TEST_START)
 	            {
 	                //
 	                // If we are polled ten times, we abort the connection. This is
 	                // because we don't want connections lingering indefinately in
 	                // the system.
 	                //
-	                if(hs->count++ >= 0)
-	                {
-	                	uip_send("Poll ",5);
-	                }
+
+	                	uip_send(SEND_DATA,122);
+
+	                	//Eger test stop biti gelirse testi bitir.
+	                	if(hs->state == END)
+	                		uip_close();
 	                return;
 	            }
-	            else if(uip_newdata() && hs->state == HTTP_NOGET)
+	            else if(uip_newdata() && hs->state == CONNECTED)
 	            {
 	                //
-	                // This is the first data we receive, and it should contain a
-	                // GET.
+	                // Ilk data alindi
 	                //
-	                // Check for GET.
+	                // Ilk bit 1 olana kadar test status gonderilmez
 	                //
-
 	                //
-	                // Check to see what we should send.
+	                // SSIB' tan Ethernet command order geldi mi? Kontrol edilir.
 	                //
-	                if((BUF_APPDATA[0] == 'a') &&
-	                   (BUF_APPDATA[1] == 'b'))
+	                if((BUF_APPDATA[0] == 1))
 	                {
 	                    //
-	                    // Send buffer 1
+	                    // Test Status biti birlenir ve ilk veri SSIB' e gonderilir.
 	                    //
-	                    uip_send("Nbr\n",
-	                            4);
-	                    hs->state = HTTP_TEXT;
-	                }
-	                else
-	                {
-	                    uip_send("Gelmedi mesajin\n",
-	                            16);
-	                    hs->bufcount = 3;
+	                	SEND_DATA[1] = 1;
+	                    uip_send(SEND_DATA,122);
+	                    hs->state = ETH_COR;
 	                }
 	            }
-	            else if(uip_acked() && (hs->state == HTTP_TEXT))
+	            else if(uip_acked() && (hs->state == ETH_COR))
 	            {
 
-	                	if((BUF_APPDATA[0] == 'a') && (BUF_APPDATA[1] == 'b'))
+	            		// Init CLT geldi mi kontrol edilir. Oyle ise test basla biti birlenir ve test baslatilir.
+	                	if((BUF_APPDATA[2] == 1) && hs->bufcount == 0)
 	                    {
-	                		//
-	                		// Send buffer 1
-	                		//
-	                		uip_send("Nbr gene\n",9);
-	                		SysCtlDelay(1000);
-	                	}else
-	                	{
-		                    uip_send("Merhaba ",
-		                            7);
-
-
-		                    uip_send("Televole ",
-		                            9);
-
-
-		                	uip_send("Turkiye ",8);
-		                    //uip_close();
+	                		hs->state = TEST_START;
+	                		SEND_DATA[3] = 1;
+	                		uip_send(SEND_DATA,122);
+	                		hs->bufcount++;
 	                	}
-
-
-
+	                	TimerEnable(TIMER0_BASE,TIMER_BOTH);
+	                	while(TimerValueGet(TIMER0_BASE)){
+	                		SEND_DATA[4] = GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_4) >> 4;
+	                		uip_send(SEND_SATA, 122);
+	                	}
+	                	//2 saniye bekleme
+	                	TimerEnable(TIMER0_BASE,TIMER_BOTH);
+	                	while(TimerValueGet(TIMER0_BASE)){
+	                		SEND_DATA[5] = GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_5) >> 5;
+	                		uip_send(SEND_DATA,122);
+	                	}
 	            }
 	            //
 	            // Finally, return to uIP. Our outgoing packet will soon be on its
@@ -192,4 +174,6 @@ void my_appcall(void)
 	        }
 	    }
 }
+
+
 //TCP header(20) ne kadar ? Link level header(14) ne kadar?
