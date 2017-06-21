@@ -1,0 +1,75 @@
+TimerDeneme
+
+
+bool intFlag true;
+
+voi TIMER0A_Handler(void)
+{
+    TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+    TimerDisable(TIMER0_BASE, TIMER_BOTH);
+    TimerLoadSet(TIMER0_BASE, TIMER_A, 40000000);
+    intFlag = false;
+}
+
+void TimerInitiate()
+{
+    IntEnable(INT_TIMER0A);
+    TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+}
+
+uint8_t GetUsrSW1(void)
+{
+    return (uint8_t) GPIOPinRead(GPIO_PORTJ_BASE, GPIO_PIN_0);
+}
+
+uint32_t ui32SysClock;
+
+/**
+ * main.c
+ */
+int main(void)
+{
+    ui32SysClock = MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ | SYSCTL_OSC_MAIN | SYSCTL_USE_PLL | SYSCTL_CFG_VCO_480), 120000000);
+    
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOJ);
+	
+	TimerConfigure(TIMER0_BASE, TIMER_BOTH);
+	TimerLoadSet(TIMER0_BASE, TIMER_A, 40000000);
+	TimerIntRegister(TIMER0_BASE, TIMER_A, TIMER0A_Handler);
+	
+	while(1)
+	{
+	    TimerInitiate();
+	    
+	    TimerEnable(TIMER0_BASE, TIMER_BOTH);
+	    
+	    while(intFlag == true)
+	    {
+	        while(GetUserSW1())
+	        {
+	            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 1);
+	        }
+	    }
+	    
+	    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0);
+	    
+	    intFlag = true;
+	    
+	    TimerInitiate();
+	    
+	    TimerEnable(TIMER0_BASE, TIMER_BOTH);
+	    
+	    while(intFlag == true)
+	    {
+	        while(GetUserSW1())
+	        {
+	            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 1);
+	        }
+	    }
+	}
+	
+	return 0;
+
+}
