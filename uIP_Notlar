@@ -1,0 +1,197 @@
+Bu notlar uIP kaynak dosyasının genel bir açıklamasıdır.
+enet_uip.c dosyasında uIP TCP stack'i kullanılmıştır. Aşağıda enet_uip.c dosyası açıklanacak ve bu açıklama esnasında gerekli yerlerde uIP TCP stack'inin gerekli kısımları açıklanacaktır.
+
+İlk olarak enet_uip'de ethernet muhaberesinde gerekli timing'i sağlayacak SysTick clock'u için gerekli 
+
+	#define SYSTICKHZ               CLOCK_CONF_SECOND
+	#define SYSTICKMS               (1000 / SYSTICKHZ)
+	#define SYSTICKUS               (1000000 / SYSTICKHZ)
+	#define SYSTICKNS               (1000000000 / SYSTICKHZ)
+
+define'ları tanımlanmıştır. 
+
+Buffer'daki ethernet header bilgisine ulaşmak için gerekli BUF define'ı tanımlanmıştır. Bu BUF tanımlanmadan önce ilk olarak UIP_BUFSIZE'dan 2 byte büyük olan yani 1602 byte g_pui8UIPBuffer dizisi tanımlanmıştır. Bu diziyi de g_pui8UIPBuffer ile aynı türden uip_buf pointer'ı göstermektedir. Buna müteakip bu uip_buf pointer(gösterici) hedef ve kaynak ethernet adresi(MAC adres) ile 2 byte'lık tip bilgisini tutan uip_eth_hdr structure'ının türüne cast edilmiştir. Bu işlemler aşağıda gösterilmiştir.
+
+u8_t g_pui8UIPBuffer[UIP_BUFSIZE + 2];
+u8_t *uip_buf = g_pui8UIPBuffer;
+
+#define BUF                     ((struct uip_eth_hdr *)uip_buf)
+
+uIP tek bir buffer kullanmaktadır ancak MAC donanımı en az 3 tane descriptör ile çalışır. Ethernet DMA descriptör'leri şu şekilde tanımlanmıştır. 
+
+#define NUM_TX_DESCRIPTORS 3
+#define NUM_RX_DESCRIPTORS 3
+tEMACDMADescriptor g_psRxDescriptor[NUM_TX_DESCRIPTORS];
+tEMACDMADescriptor g_psTxDescriptor[NUM_RX_DESCRIPTORS];
+
+uint32_t g_ui32RxDescIndex;
+uint32_t g_ui32TxDescIndex;
+
+ Yukarıda görülen tEMACDMADescriptor descriptorü tek bir ethernet DMA buffer descriptörünün yapsını tanımlamaktadır.
+
+TEMACDMADescriptor structure'ının ilk word'ü ui32CtrlStatus ile isimlendirilmiştir ve descriptorün alış veya iletim queue'isnde olmasına bağımlı olan çeştli kontrol ve status bitlerine sahiptir. 31.nci biti her zaman OWN bitidir ve set edildiği zaman descriptörün kontrolü donanımdadır. 
+
+Ikinci word ise ui32Count wordüdür ve buffer ya da descriptöre atanan buffer'ın boyutunu ve ek olrak çeşitli kontrol bitlerini içermektedir. 
+
+Üçüncü word ise void türden bir pointer(gösterici) olan pvBuffer1'dir ve bu gösterici iletilecek datayı içerir ya da içine alınan data yazılmıştır. Bu pointer dahili SRAM'daki bi buffer'ı göstermelidir. Flash ya da EPI-connected hafıza olmaz.
+
+tEMACDES3 DES3;
+
+Yukarıdaki 4.ncu desciptör wordü tEMACDES3 türündendir. Bu tür hem bir sonraki descriptörün gösterilmesini sağlayabilir ya da ikinci bir data buffer'ının gösterilmesini sağlayabilmektedir. Bu durum CHAINDE modda olup olmamaya göre değişmektedir.
+
+6.ncı word esasında iletilen descriptor için rezerve edilmiştir fakat receive descriptörün descriptor'ün extended durumu için de kullanılmaktadır.
+
+7.word alınan ve iletilen descriptörler için rezerve edilmiştir. 
+
+8.nci ve 9.ncu word'ler 32'şer bitten toplam 64 bit olan timestamp capture iletilen ve alınan data paketin sonunu içerdiğinde set edilir.
+
+İletilen ve alınan bufferlar ise aşağıda görüldüğü gibi tanımlanmaktadır. 
+
+#define RX_BUFFER_SIZE 1536
+#define TX_BUFFER_SIZE 1536
+uint8_t g_pui8RxBuffer[RX_BUFFER_SIZE];
+uint8_t g_pui8TxBuffer[TX_BUFFER_SIZE];
+
+SysTick interrupt' ı ve TX ile RX paketlerinin iletim ve alış durumları ile ilgili aşağıdaki g_ui32Flags bayrağı ve aşağıda gösterilen define'lar kulllanılmıştır. Bu define'lardan FLAG_SYSTICK bir systick interrupt'ının oluştuğunu FLAG_RXPKT bir RX paketi alındığını FLAG_TXPKT bir TX paketinin DMA transferinin beklemede olduğunu FLAG_RXPKTPEND ise bir RX paketinin DMA transferinin beklemede olduğunu göstermektedir.
+
+#define FLAG_SYSTICK            0
+#define FLAG_RXPKT              1
+#define FLAG_TXPKT              2
+#define FLAG_RXPKTPEND          3
+static volatile uint32_t g_ui32Flags;
+
+Aşağıda belirtilen g_ui32TickCounter ise her bir SYSTICKMS'de arttırılan system tick sayıcısıdır.
+
+volatile uint32_t g_ui32TickCounter = 0;
+
+Bu uygulama için varsayılan TCP/IP ayarları aşağıda görüldüğü gibidir. 
+Varsayılanda link lokal adresi ...(169.254.1.0 to 169.254.254.255) şeklindedir. Bu uygulama zeroconf protokolünü uygulamamaktadır. Kullandığımız IP adresinin hali hazırda kullanıp kullanılmadığı test edilmemektedir. Aşağıdaki STATIC_IP define'ı eğer statik IP kullanılmayacaksa yorum satırı olarak değiştirilmelidir. Yani iptal edilmelidir.
+
+#define USE_STATIC_IP
+
+#ifndef DEFAULT_IPADDR0
+#define DEFAULT_IPADDR0         169
+#endif
+
+#ifndef DEFAULT_IPADDR1
+#define DEFAULT_IPADDR1         254
+#endif
+
+#ifndef DEFAULT_IPADDR2
+#define DEFAULT_IPADDR2         19
+#endif
+
+#ifndef DEFAULT_IPADDR3
+#define DEFAULT_IPADDR3         63
+#endif
+
+#ifndef DEFAULT_NETMASK0
+#define DEFAULT_NETMASK0        255
+#endif
+
+#ifndef DEFAULT_NETMASK1
+#define DEFAULT_NETMASK1        255
+#endif
+
+#ifndef DEFAULT_NETMASK2
+#define DEFAULT_NETMASK2        0
+#endif
+
+#ifndef DEFAULT_NETMASK3
+#define DEFAULT_NETMASK3        0
+#endif
+
+Aşağıda ise uIP timer'ı ile Arp timer'ının süreleri tanumlanmıştır.
+
+#define UIP_PERIODIC_TIMER_MS   500
+#define UIP_ARP_TIMER_MS        10000
+
+Aşağıda driver kütüphanesi bi hata ile karşılaşırsa çağırılan error rutini fonnsiyonu tanımlanmıştır.
+
+void
+__error__(char *pcFilename, uint32_t ui32Line)
+{
+}
+
+Aşağıda SysTick interrupt'ının handler metodu tanımlanmıştır. Methodda görüldüğü üzere g_ui32TickCounter systick sayıcı değişkeni 1 arttırılmış ve g_ui32Flags bayrak değişkeninin FLAG_SYSTICK(0.ncı) biti birlenmiştir.
+
+void
+SysTickIntHandler(void)
+{
+    //
+    // Increment the system tick count.
+    //
+    g_ui32TickCounter++;
+
+    //
+    // Indicate that a SysTick interrupt has occurred.
+    //
+    HWREGBITW(&g_ui32Flags, FLAG_SYSTICK) = 1;
+}
+
+uIP timer modülü kullanılacaksa aşağıdaki fonksiyon kullanılmalıdır ve bu fonksiyon systick inteeruptı tick sayısını göndermektedir. Ayrıca clock-arch.h header soyaındaki CLOCK_CONF_SECONDS define saniyedeki tick sayısını tanımlamaktadır. 
+
+clock_time_t (bu uin32_t'ye karşılık gelmektedir.)
+clock_time(void)
+{
+    return((clock_time_t)g_ui32TickCounter);
+}
+
+Aşağıdaki method status'u belirten string ifadeyi LCD'de gösterir ve aynı zamanda seri porta gönderir.
+
+void
+UpdateStatus(char *pcStatus)
+{
+    //
+    // Dump that status string to the serial port.
+    //
+    UARTprintf("%s\n", pcStatus);
+}
+
+Aşağıdaki method mevcut IP adresini ekranda gösterir ve UART üzerinden gönderir.
+
+void
+ShowIPAddress(const uip_ipaddr_t sIPAddr)
+{
+    char pcBuffer[24];
+
+    usprintf(pcBuffer, "IP: %d.%d.%d.%d", sIPAddr[0] & 0xff,
+             sIPAddr[0] >> 8, sIPAddr[1] & 0xff, sIPAddr[1] >> 8);
+    UpdateStatus(pcBuffer);
+}
+
+Aşağıdaki fonksiyon ethernet interrupt'ı için interrupt handler'dır.
+
+void
+EthernetIntHandler(void)
+{
+    uint32_t ui32Temp;
+
+    //
+    // Read and Clear the interrupt.
+    //
+    ui32Temp = MAP_EMACIntStatus(EMAC0_BASE, true);
+    MAP_EMACIntClear(EMAC0_BASE, ui32Temp);
+
+    //
+    // Check to see if an RX Interrupt has occurred.
+    //
+    if(ui32Temp & EMAC_INT_RECEIVE)
+    {
+        //
+        // Indicate that a packet has been received.
+        //
+        HWREGBITW(&g_ui32Flags, FLAG_RXPKT) = 1;
+    }
+
+    //
+    // Has the DMA finished transferring a packet to the transmitter?
+    //
+    if(ui32Temp & EMAC_INT_TRANSMIT)
+    {
+        //
+        // Indicate that a packet has been sent.
+        //
+        HWREGBITW(&g_ui32Flags, FLAG_TXPKT) = 0;
+    }
+}
