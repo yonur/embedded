@@ -1,0 +1,21 @@
+// Aşağıdaki define' lar ile sistem saati set edilir.
+// #define SYSTICKHZ               100 
+// #define SYSTICKMS               (1000 / SYSTICKHZ)
+
+// Aşağıda görüldüğü üzere sistem clock' unu set etmek için gerekli define' lar tanımlanmıştır.
+
+// #define SYSTICK_INT_PRIORITY    0x80
+// #define ETHERNET_INT_PRIORITY   0xC0
+
+// Mevcut IP adresini belirten değişken
+
+// uint32_t g_ui32IPAddress;
+
+//  Sistem frekansını belirten değişken
+
+// uint32_t g_ui32SysClock;
+
+// Host bağımlı timer fonksiyonların desteklenmesi için lwIP kütüphaneye ihtiyaç duyulmuştur.
+
+// Mevcut IP adresi lwIPLocalIPAddrGet methodu ile alınır.
+
