@@ -476,9 +476,31 @@ InitDescriptors(uint32_t ui32Base)
 // ROM_SysTickPeriodSet(ui32SysClock / SYSTICKHZ);
 // ROM_SysTickEnable();
 // ROM_SysTickIntEnable(); satırları ile SysTick' in clock' u, kendisi ve interrupt' ı set edilmiştir.
-// Ethernet çevre birimi set ve reset edilir.
+// Ethernet çevre birimi set ve reset edilir(EMAC0, PHY0).
+//
+    // Enable and reset the Ethernet modules.
+    //
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_EMAC0);
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_EPHY0);
+    ROM_SysCtlPeripheralReset(SYSCTL_PERIPH_EMAC0);
+    ROM_SysCtlPeripheralReset(SYSCTL_PERIPH_EPHY0);
+    
 // MAC ilklendirilir ve ethernet modu set edilir.
 // Ethernet descriptor' ü ilklendirilir ve önceden kalan ethernet interrupt' ı varsa temizlenir.
+//
+    // Clear any pending interrupts.
+    //
+    ROM_EMACIntClear(EMAC0_BASE, EMACIntStatus(EMAC0_BASE, false));
+
+    //
+    // Initialize the uIP TCP/IP stack.
+    //
+    
+ // uIP' nin ilklendirilmesi için uip_init() methodu kullanılır. Dinlenen portlar sıfırlanır ve uIP bağlantıları kapatılır.
+    uip_init();
+    
+ // 
+    
 // Alış descriptor' ü interrupt' ı set edilir. 
 
 //*****************************************************************************
