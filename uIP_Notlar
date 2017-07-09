@@ -500,8 +500,66 @@ InitDescriptors(uint32_t ui32Base)
     uip_init();
     
  // 
-    
-// Alış descriptor' ü interrupt' ı set edilir. 
+
+// uIP için lokal MAC adresi set edilir.
+// sTempAddr lokal değikenine aktarılmış MAC adresi uip_ethaddr' e aktarılmaktadır.
+// uip_setethaddr(sTempAddr);
+
+// Eğer statik IP kullanılıyorsa aşağıdaki fonksiyonlar kullanılarak gerekli IP adresi, netmask gibi ayarlar yapılmaktadır.
+//  uip_ipaddr(sIPAddr, DEFAULT_IPADDR0, DEFAULT_IPADDR1, DEFAULT_IPADDR2,
+//             DEFAULT_IPADDR3);
+//  uip_sethostaddr(sIPAddr);
+//  ShowIPAddress(sIPAddr);
+//  uip_ipaddr(sIPAddr, DEFAULT_NETMASK0, DEFAULT_NETMASK1, DEFAULT_NETMASK2,
+//             DEFAULT_NETMASK3);
+//  uip_setnetmask(sIPAddr);
+
+// Aşağıda görüldüğü üzere ROM_EMACTxEnable ve ROM_EMACRxEnable methodları ile alış ve iletim ethernet MAC etkinleştirilir.
+// Ayrıca ethernet interrupt' ı ve ethernet RX paket interrupt' ı etkinleştirilir.
+
+//  ROM_EMACTxEnable(EMAC0_BASE);
+//  ROM_EMACRxEnable(EMAC0_BASE);
+
+//  ROM_IntEnable(INT_EMAC0);
+//  ROM_EMACIntEnable(EMAC0_BASE, EMAC_INT_RECEIVE);
+
+// İlk alış descriptor' ünün OWN biti DAM' nın alış işlemine başlayabilmesi için set edilir. 
+// g_psRxDescriptor[g_ui32RxDescIndex].ui32CtrlStatus |= DES0_RX_CTRL_OWN;
+
+// httpd_init() methodu ile 80 numaralı port dinlenmeye başlamıştır.
+
+// Aşağıdaki timer' lar için kullanılacak değişkenler sıfırlanıp sonsuz döngüye girilir.
+
+// i32PeriodicTimer = 0;
+// i32ARPTimer = 0;
+ 
+// Sonsuz döngü içerisinde ikinci bir while döngüsünde g_ui32Flags değişkeninin System Tick event' i ya da RX paketi event' i tarafından sıfırlanması beklenir.
+
+//        while(!g_ui32Flags)
+//	{
+//	}
+
+// Eğer SysTick event' i ise oluşan event SysTick interrupt flag' ı temizlenir ve timer' lar arttırılır.
+
+// RX paket interrupt' ı kontrol edilir ve okunur.
+// Eğer set edilmişse bayrak sıfırlanır ve alınan verinin uzunluğu uip_len' e dönecek şekilde gelen data buffer' a aktarılır.
+// Bu buffer uip_buf  uip_eth_hdr türündendir. 
+// 
+
+ //
+        // Check for an RX Packet and read it.
+        //
+        if(HWREGBITW(&g_ui32Flags, FLAG_RXPKT))
+        {
+            //
+            // Clear the RX Packet event flag.
+            //
+            HWREGBITW(&g_ui32Flags, FLAG_RXPKT) = 0;
+
+            // Get the packet and set uip_len for uIP stack usage.
+            //
+            uip_len = (unsigned short)PacketReceive(EMAC0_BASE, uip_buf,
+                                                    sizeof(g_pui8UIPBuffer));
 
 //*****************************************************************************
 //
