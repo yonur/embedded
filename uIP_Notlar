@@ -160,8 +160,8 @@ ShowIPAddress(const uip_ipaddr_t sIPAddr)
     UpdateStatus(pcBuffer);
 }
 
-Aşağıdaki fonksiyon ethernet interrupt'ı için interrupt handler'dır.
-
+//Aşağıdaki fonksiyon ethernet interrupt'ı için interrupt handler'dır.
+//Aşağıda görüldüğü üzere ui32Temp lokal değişkeni Ethernet 
 void
 EthernetIntHandler(void)
 {
