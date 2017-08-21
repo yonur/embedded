@@ -22,4 +22,10 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
  
  configUSE_IDLE_HOOK -> idle hook kullanılacaksa 1 olarak, bir idle hook' u ihmal etmek için ise 0 olarak ayarlanmaktadır.
  
- configUSE_MALLOC_FAILED_HOOK -> kernel, her task, queue yada semafot
+ configUSE_MALLOC_FAILED_HOOK -> kernel, her task, queue yada semafor yaratıldığında heap'ten bir hafıza alanını pvPortMalloc() kullanarak tahsis eder.
+ Bu amaçla FreeRTOS'un yüklendiğinde içerisinde bulunan 4 temel hafıza tahsis şeması vardır. heap_1.c, heap_2.c, heap_3.c, heap_4.c ve heap_5.c  kaynak dosyalarında uygulanan
+ bu şemalar uygulanmaktadır. configUSE_MALLOC_FAILED_HOOK bu üç şema durumuna uygun olarak uygulanmaktadır.
+ 
+ malloc() hook fonksiyonu uygulamada hata vermektedir ki bu durumda pvPortMalloc() NULL dönmektedir. NULL yalnızca geri kalan FreeRTOS hafızası 
+ başarılıl bir yer tahsisi için yetersiz kaldığında geri dönüş değeri olmaktadır.
+ Eğer
