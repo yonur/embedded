@@ -9,5 +9,17 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
     - configUSE_PORT_OPTIMISED_TASK_SELECTION 0 olarak ayarlandığında, yada bu porta özel method uygulanmadığında kullanılmaktadır.
     - bütün FreeRTOS portları ile kullanılabilmektedir.
     - bütünüyle C dilinde yazılmıştır, bu durum porta özel methoda göre daha az etkin olmasına neden olmaktadır.
-    - erişilebilir priority'lerin sayısının belli bir limitte olmasına zorlamamaktadır.
+    - erişilebilir priority'lerin sayısının belli bir üst limiti aşmamasına zorlamamaktadır.
+  Porta özel method:
+    - bütün portlar için erişilebilir değildir.
+    - configUSE_PORT_OPTIMISED_TASK_SELECTION 1 olarak ayarlandığında kullanılır.
+    - bir yada daha fazla mimariye özel assembly instruction'larına bağlıdır (tipik olarak Count Leading Zeros(CLZ) yada eşdeğer instruction)bundan dolayı özel olarak yazıldığı mimariyle birlikte kullanılabilmektedir.
+    - generic method'dan daha etkindir.
+    - Tipik olarak maksimum erişilebilir priority sayısı 32 ile sınırlı olmaya zorlanmaktadır.
+  
+ configUSE_TICKLESS_IDLE -> 'low power tickless mode' ile kullanılması için 1 olarak, yada tick interrupt çalışmayı devamlı çalıştırmak için 0 olarak
+ ayarlanır.
  
+ configUSE_IDLE_HOOK -> idle hook kullanılacaksa 1 olarak, bir idle hook' u ihmal etmek için ise 0 olarak ayarlanmaktadır.
+ 
+ configUSE_MALLOC_FAILED_HOOK -> kernel, her task, queue yada semafot
