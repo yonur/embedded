@@ -66,4 +66,55 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   isteniyorsa configUSE_TRACE_FACILITY ve configUSE_STATS_FORMATTING_FUNCTIONS 1 olarak ayarlanmalıdır. Build esnasında ihmal etmek için ise
   0 olarak ayarlanmalıdır.
   
-  configUSE_16_BIT_TICKS -> 
+  configUSE_16_BIT_TICKS -> Zaman, RTOS kerneli çalışmaya başladığından beri tick interrupt'ının meydana gelme sayısını temsil eden 'ticks' 
+  ile ölçülmektedir.
+  configUSE_16_BIT_TICKS'nin 1 olarak ayarlanması TickType_t'nin 16 bit olarak tanımlanmasına, 0 ayarlanması 32 bit olarak tanımlanmasına 
+  neden olmaktadır.
+  16 bit tip kullanılması 8 bit ve 16 bit mimari için performansı arttırmaktadır fakat zaman periyodunu 65535 tick ile sınırlamaktadır. Bu durumda örneğin
+  250 Hz tick frekansı için maksimum gecikme süresi 262 saniyedir fakat 32 bit tip sayıcı kullanılsa 17179869 saniye gecikme verilebilir.
+  
+  configIDLE_SHOULD_YIELD -> Bu parametre idle priority için task'ların davranışını kontrol eder. Yalnızca etki ettiği durum:
+    1- Preemptive scheduler kullanıldığında.
+    2- Uygulama idle priority'de çalışan task'lar yarattığında.
+  Eğer configUSE_TIME_SLICING 1 olarak ayarlanırsa(yada tanımsızsa) aynı priority'yi paylaşan task'lar zamanı dilimleyeceklerdir. Eğer 
+  hiç bir task preempt edilmemişse verilen priority'deki her bir task zamanı eşit zaman diliminde çalışırlar - bu durum gerçekte idle priority'nin
+  üstündeki değer için geçerlidir.
+  Eğer task'lar idle priority değerinde ise davranışları değişmektedir. Eğer configIDLE_SHOULD_YIELD 1 olaraak set edilmişse idle task başka 
+  idle prioty'li task ayarlanmış olsa da hemen çalışır. Bu durum idle task çalıştığı esnada çalışan idle priority'li task'ın diğer diğer idle priority'li
+  task'lardan daha az süre almasına sebep olur.
+  Bunu engellemek için aşağıdakiler uygulanabilir:
+    1- Eğer uygunsa, idle priority' deki ayrı tasklar yerine idle hook kullanılır
+    2- Bütün oluşturulan task'lar idle priority'den daha yüksek öncelikli oluşturulur
+    3- configIDLE_SHOULD_YIELD 0 olarak ayarlanır.
+  configIDLE_SHOULD_YIELD'nin 0 olarak ayarlanması zaman diliminin sonuna kadar idle taskın processing time'ı harcamasına engel olmaktadır.
+  Bu durum bütün idle priority'deki task'ların eşit processing time'ı almasını fakat toplamda idle task'ın daha yüksek oranda processing time
+  maliyetine sahip olmasına neden olmaktadır.
+  
+  configUSE_TASK_NOTIFICATIONS -> configUSE_TASK_NOTIFICATIONS'nin 1 olarak ayarlanması (yada tanımsız olarak bırakılması) 'direct to task notification' 
+  fonksiyonalitesine ve derleme içinde API'nin ilişkilendirilmesini içermektedir. Eğer  0 olarak ayarlanırsa yukarıdaki durumlar kapsam dışına çıkmaktadır.
+  'direct to task notification'nin build içerisindeki dahili olma maliyeti her bir task başına 8 ekstra byte'dır.
+  
+  configUSE_MUTEXES -> 1 olarak ayarlanması build esnasında mutex'in dahil edilmesine sebep olmaktadır. 
+  
+  configUSE_RECURSIVE_MUTEXES -> 1 olarak ayarlanması build esnasında recursive mutex'in dahil edilmesine sebep olmaktadır. 
+  
+  configUSE_COUNTING_SEMAPHORES -> 1 olarak ayarlanması build esnasında counting semaphore'un dahil edilmesine sebep olmaktadır. 
+  
+  configUSE_ALTERNATIVE_API -> 1 olarak ayarlanması build esnasında 'alternative' queue function'ın dahil edilmesine sebep olmaktadır. 
+  alternative API yeni tasarımlarda kullanılmaktadır.
+  
+  configCHECK_FOR_STACK_OVERFLOW -> stack overflow detection sayfası bu parametrenin kullanımını tanımlamaktadır.
+  
+  configQUEUE_REGISTRY_SIZE -> Queue registry'nin 2 amacı vardır, her ikisi de RTOS kernel farkındalıklı debuggin'dir: 
+    1- GUI debugging içerisindeki kolay queue tanımlaması için olan queue ile alakalı metinsel isime izin verir.
+    2- Her bir registered queue ve semafor için yerleşmeyi amaçlayan debugger tarafından ihtiyaç duyulan bilgiyi içerir.
+  RTOS kernel farkındaliklı debugger'ı kulllanmadıkça queue register'ın bir amacı yoktur.
+  configQUEUE_REGISTRY_SIZE register edilebilen maksimum sayıdaki queue ve semafor'u tanımlamaktadır.
+  Yalnızca RTOS kernel farkındalıklı debugger kullanarak bu görmek istedğiniz queueu'lar ve semafor'ların kaydedilmeye(registered) ihtiyaç duyulur.
+  vQueueAddToRegistry() ve vQueueUnregisterQueue() hakkında daha fazla bilgi için API referans dokümanına bakınız.
+  
+  configUSE_QUEUE_SETS -> queue set fonksiyonalitesi içermesi için (çoklu queue ve semafor üzerindeki block, yada pend imkanı için) 1 olarak 
+  ayarlanmaktadır.
+  
+  configUSE_TIME_SLICING -> Varsayılanda 
+  
