@@ -25,7 +25,7 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
  configUSE_MALLOC_FAILED_HOOK -> kernel, her task, queue yada semafor yaratıldığında heap'ten bir hafıza alanını pvPortMalloc() kullanarak tahsis eder.
  Bu amaçla FreeRTOS'un yüklendiğinde içerisinde bulunan 4 temel hafıza tahsis şeması vardır. heap_1.c, heap_2.c, heap_3.c, heap_4.c ve heap_5.c  kaynak dosyalarında uygulanan
  bu şemalar uygulanmaktadır. configUSE_MALLOC_FAILED_HOOK bu üç şema durumuna uygun olarak uygulanmaktadır.
- 
  malloc() hook fonksiyonu uygulamada hata vermektedir ki bu durumda pvPortMalloc() NULL dönmektedir. NULL yalnızca geri kalan FreeRTOS hafızası 
- başarılıl bir yer tahsisi için yetersiz kaldığında geri dönüş değeri olmaktadır.
- Eğer
+ başarılı bir yer tahsisi için yetersiz kaldığında geri dönüş değeri olmaktadır.
+ Eğer configUSE_MALLOC_FAILED_HOOK 1 olarak ayarlanırsa bir malloc() failed fonksiyonu tanımlanmalıdır. Eğer 0 olarak ayarlanmışsa tanımlanmış olsa bile 
+ geri dönmez
