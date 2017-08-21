@@ -1,4 +1,4 @@
-Konfigurasyon Parametreleri:
+                                            KONFİGÜRASYON PARAMETRELERİ
 Bu parametreler birer macro(define)'dur. Tanım değerine göre FreeRTOS farklı konfigürasyona ayarlanabilmektedir.
 
 configUSE_PREEMPTION -> Eğer 1 olarak tanımlanırsa preemptive RTOS scheduler, 0 olarak tanımlanırsa cooperative RTOS scheduler kullanılacaktır.
@@ -33,4 +33,37 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
  
  configUSE_DAEMON_TASK_STARTUP_HOOK -> Eğer configUSE_TIMERS ve configUSE_DAEMON_TASK_STARTUP_HOOK'nun her ikisi de 1 olarak ayarlanmışsa
  aşağıda gösterildiği şekilde bir isme ve prototipe sahip bir hook fonksiyonu tanımlanmalıdır. Hook fonksiyonu RTOS deamon task(timer servis task' da denilmektedir) 
- ilk defa çalıştığında tam olarak 1 kere çağırılmalıdır. 
+ ilk defa çalıştığında tam olarak 1 kere çağırılmalıdır. RTOS'un çalışması için gereken herhangi bir uygulamanın ilklendirme hook fonksiyonu içerisine yerleştirilebilmektedir.
+  void void vApplicationDaemonTaskStartupHook( void );
+  
+  configUSE_TICK_HOOK -> 'tick hook'u kullanmak istiyorsak 1 olarak, istemiyorsak 0 olarak ayarlamamız gerekmektedir.
+  
+  configCPU_CLOCK_HZ -> çevresel birimin kullanması için sürülen dahili(internal) clock'un girilir ki bu değeri genelde dahili CPU clock 
+  üretmektedir. Bu değer timer'ları düzgün bir şekilde konfigüre etmek için gerekmektedir.
+  
+  configTICK_RATE_HZ -> RTOS tick interrupt'ın frekansıdır. 
+  tick interrupt zamanı ölçmek için kullanılmaktadır. Bundan dolayı daha yüksek tick frekansına sahip olmak zamanın daha yüksek bir
+  çözünürlükle ölçülebilmesini sağlamaktadır.
+  
+  configMAX_PRIORITIES -> Uygulama task'ı için erişilebilir priority'lerin sayısıdır. Herhangi bir sayıdaki task aynı priority'yi paylaşabilmektedir.
+  Coroutine'ler ayrıca önceliklendirileceklerdir (prioritised) - configMAX_CO_ROUTINE_PRIORITIES'i inceleyiniz.
+  Herbir erişilebilir priority, RTOS kernel'i içerisindeki RAM'i tüketmektedir ki bundan dolayı sizin uygulamanız tarafından gerçekte istenenden 
+  daha yüksek olmamalıdır.
+  
+  configMINIMAL_STACK_SIZE -> Idle task tarafından kullanılan stack'in boyutudur. Genelde kullanmakta olduğunuz port için olan demo ı-uygulaması 
+  ile gelen FreeRTOSConfig.h'im içerisindeki değerden elde edilmemelidir.
+  xTaskCreate() ve xTaskCreateStatic() fonksiyonları için olan stack size parametrelerinde olduğu gibi, stack size word cinsinden 
+  belirtilmektedir, byte cinsinden değil.
+  Stack'teki her bir item 32 bit değerlikli ise, stack size'ın 100 olması 400 byte'lık bir alanı temsil etmektedir (her bir 32 bit'lik stack itemi 4 byte'ı temsil etmektedir).
+  
+  configMAX_TASK_NAME_LEN -> Task yaratılırken tanımlatıcı ismin müsade edilebilir maksimum uzunluğunu temsil etmektedir. NULL termination byte'ı da içerecek
+  şekilde toplam karakter sayısının değeridir.
+  
+  configUSE_TRACE_FACILITY -> Eğer visualisation ve tracing çalışması ile ek structure member'ların ve fonksiyonların da dahil olması
+  isteniyorsa 1 olarak ayarlanmalıdır.
+  
+  configUSE_STATS_FORMATTING_FUNCTIONS -> Build esnasında vTaskList() ve vTaskGetRunTimeStats() fonksiyonlarının da dahil olması 
+  isteniyorsa configUSE_TRACE_FACILITY ve configUSE_STATS_FORMATTING_FUNCTIONS 1 olarak ayarlanmalıdır. Build esnasında ihmal etmek için ise
+  0 olarak ayarlanmalıdır.
+  
+  configUSE_16_BIT_TICKS -> 
