@@ -28,4 +28,9 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
  malloc() hook fonksiyonu uygulamada hata vermektedir ki bu durumda pvPortMalloc() NULL dönmektedir. NULL yalnızca geri kalan FreeRTOS hafızası 
  başarılı bir yer tahsisi için yetersiz kaldığında geri dönüş değeri olmaktadır.
  Eğer configUSE_MALLOC_FAILED_HOOK 1 olarak ayarlanırsa bir malloc() failed fonksiyonu tanımlanmalıdır. Eğer 0 olarak ayarlanmışsa tanımlanmış olsa bile 
- geri dönmez
+ geri dönmez. Malloc() failed fook fonksiyonunun isimi ve prototip tanımı aşağıda gösterilmiştir.
+  void vApplicationMallocFailedHook( void );
+ 
+ configUSE_DAEMON_TASK_STARTUP_HOOK -> Eğer configUSE_TIMERS ve configUSE_DAEMON_TASK_STARTUP_HOOK'nun her ikisi de 1 olarak ayarlanmışsa
+ aşağıda gösterildiği şekilde bir isme ve prototipe sahip bir hook fonksiyonu tanımlanmalıdır. Hook fonksiyonu RTOS deamon task(timer servis task' da denilmektedir) 
+ ilk defa çalıştığında tam olarak 1 kere çağırılmalıdır. 
