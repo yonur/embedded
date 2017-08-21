@@ -1,0 +1,13 @@
+Konfigurasyon Parametreleri:
+Bu parametreler birer macro(define)'dur. Tanım değerine göre FreeRTOS farklı konfigürasyona ayarlanabilmektedir.
+
+configUSE_PREEMPTION -> Eğer 1 olarak tanımlanırsa preemptive RTOS scheduler, 0 olarak tanımlanırsa cooperative RTOS scheduler kullanılacaktır.
+
+configUSE_PORT_OPTIMISED_TASK_SELECTION -> Bazı FreeRTOS portlarının bir sonraki task'ın çalışması için seçebileceği 2 method bulunmaktadır.
+Bu methodlar, generic method ve bu porta özel olan methoddur. 
+  Generic Method: 
+    - configUSE_PORT_OPTIMISED_TASK_SELECTION 0 olarak ayarlandığında, yada bu porta özel method uygulanmadığında kullanılmaktadır.
+    - bütün FreeRTOS portları ile kullanılabilmektedir.
+    - bütünüyle C dilinde yazılmıştır, bu durum porta özel methoda göre daha az etkin olmasına neden olmaktadır.
+    - erişilebilir priority'lerin sayısının belli bir limitte olmasına zorlamamaktadır.
+ 
