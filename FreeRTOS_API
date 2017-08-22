@@ -243,5 +243,14 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   bundan dolayı asla RTOS kernel aktivitesi tarafından çalışmaları geciktirilemez(donanımın kendi limitleri içerisinde).
   configKERNEL_INTERRUPT_PRIORITY ve configMAX_SYSCALL_INTERRUPT_PRIORITY'nin her ikisini de implemente eden portlar için:
   configKERNEL_INTERRUPT_PRIORITY, RTOS kernel'inin kendisi tarafından kullanılan interrupt priority'yi ayarlar. 
-
+  configMAX_SYSCALL_INTERRUPT_PRIORITY, interrupt safe FreeRTOS API fonksiyonlarının çağırılabilenlerinden en yüksek interrupt priority'li 
+  olanı ayarlamak için kullanılır.
+  "Full interrupt nesting model" configMAX_SYSCALL_INTERRUPT_PRIORITY'nin configKERNEL_INTERRUPT_PRIORITY'den daha yüksek olarak (daha yüksek priority seviyesinde)
+  ayarlanması ile elde edilir.Bu şu anlama gelir ki kritik kısımlarda(critical sections) bile FreeRTOS kernel'i interrupt'ları tamamıyle 
+  etkisizleştiremez. Dahası bu bölünmüş kernel(çekirdek) mimarisnin dezavantajları olmaksızın elde edilir. Buna rağmen dikkat edilmelidir ki,
+  belirli mikrokontrolör mimarileri(donanım içerisinde) yeni bir interrupt alındığında interruptları etkisizleştirecektir - bu şu anlam gelir ki
+  interrupt'lar kısa bir süre istenmeyen bir şekilde donanımın interrupt'ı kabul etmesi ile FreeRTOS'un interrupt'ları tekrar etkinleştirmesi arasında 
+  etkisizleştirir.
+  Interrupt'lar configMAX_SYSCALL_INTERRUPT_PRIORITY'nin üzerindeki priority'de çalışan API fonksiyonlarını çağıramamaktadır ve bundan dolayı
+  RTOS kernel çalışması tarafından geciktirilemezler.
   
