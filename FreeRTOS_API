@@ -229,6 +229,19 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   
   configKERNEL_INTERRUPT_PRIORITY
   configMAX_SYSCALL_INTERRUPT_PRIORITY ve
-  configMAX_API_CALL_INTERRUPT_PRIORITY ->
+  configMAX_API_CALL_INTERRUPT_PRIORITY -> configKERNEL_INTERRUPT_PRIORITY ayar makrosunu içeren port'lar  ARM Cortex-M3, PIC24, dsPIC, PIC32, SuperH 
+  ve RX600 mikrokontrolör ailelerini içermekte, configMAX_SYSCALL_INTERRUPT_PRIORITY ayar makrosunu içeren port'lar PIC32, RX600, ARM Cortex-A 
+  ve ARM Cortex-M mikrokojntrlör ailelelerini içermektedir. 
+  Cortex-M3 ve Cortex-M4 mikrokontrolör ailelerini kullanan kullanıcılar bu bölümün sonundaki notlara dikkat etmelidir.
+  configMAX_API_CALL_INTERRUPT_PRIORITY, configMAX_SYSCALL_INTERRUPT_PRIORITY'nin daha yeni port'lar için kullanılan güncel versiyonudur.
+  İkisi birbirinin dengidir.
+  configKERNEL_INTERRUPT_PRIORITY, en düşük priority ile ayarlanmalıdır.
+  Dikkat edilmesi gereken husus aşağıda yalnızca "FromISR"nin sonundaki API fonksiyonlarıdır ki interrupt servis routine içerisinden çağırılabilsin.
+  Yalnızca configKERNEL_INTERRUPT_PRIORITY'yi implemente eden portlar için:
+  configKERNEL_INTERRUPT_PRIORITY, RTOS kernel'in kendi tarafından kullanılan interrupt priority ayarlar. API fonksiyonlarını çağıran
+  interrput'lar da bu priority'de çalışmalıdır. API fonksiyonlarını çağırmayan interrupt'lar daha yüksek priority'de çalışabilirler ve
+  bundan dolayı asla RTOS kernel aktivitesi tarafından çalışmaları geciktirilemez(donanımın kendi limitleri içerisinde).
+  configKERNEL_INTERRUPT_PRIORITY ve configMAX_SYSCALL_INTERRUPT_PRIORITY'nin her ikisini de implemente eden portlar için:
+  configKERNEL_INTERRUPT_PRIORITY, RTOS kernel'inin kendisi tarafından kullanılan interrupt priority'yi ayarlar. 
 
   
