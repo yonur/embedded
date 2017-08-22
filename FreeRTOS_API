@@ -198,6 +198,37 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   Eğer 0 olarak ayarlanırsa RTOS nesneleri sadece kodlayıcı tarafından belirtilen RAM hafıza alanı kullanılarak yaratılabilmektedir.
   Eğer tanımsız olarak bırakılırsa 1 olarak ayarlanmış gibi davranmaktadır.
   
-  configTOTAL_HEAP_SIZE -> 
+  configTOTAL_HEAP_SIZE -> FreeRTOS heap'i üzerindeki toplam erişilebilir RAM alanını temsil etmektedir.
+  Bu değer yalnızca eğer configSUPPORT_DYNAMIC_ALLOCATION 1 olarak ayarlanılırsa kullanılabilir ve uygulama FreeRTOS kaynak kodu yüklendiğinde 
+  beraberinde gelen temel hafıza yerleşim şemalarının birinden faydalanır. Daha detaylı bilgi için 'memory configuration' kısmı incelenmelidir.
+  
+  configAPPLICATION_ALLOCATED_HEAP -> Varsayılanda FreeRTOS heap FreeRTOS tarafından deklare edilir ve linker tarafından hafızaya yerleştirilir.
+  Eğer bu değişken 1 olarak ayarlanırsa uygulamayı kodlayan yukarıdaki işlemleri istediği gibi yapabilmektedir.
+  Eğer heap_1.c,heap_2.c yada heap_4.c kullanılırsa ve configAPPLICATION_ALLOCATED_HEAP 1 olarak ayarlanırsa bunu müteakip uygulamayı kodlayan 
+  aşağıda belirtildiği üzere belirrli bir isme ve boyuta sahip bir uin8_t dizisi oluştumalıdır. Bu dizi FreeRTOS heap olarak kullanılacaktır.
+  Dizini belirli bir hafoza alanına nasıl yerleştirileceği derleyiciye bağlıdır.
+  uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
+  
+  configGENERATE_RUN_TIME_STATS -> Run Time Stats sayfasında bu parametrenin kullanımı açıklanmaktadır.
+  
+  configUSE_CO_ROUTINES -> Eğer 1 olarak ayarlanırsa coroutine derleme içerisinde değerlendirilir. Bunun sağlanması için croutine.c
+  dosyası da proje içerisinde yer almalıdır.
+  
+  configMAX_CO_ROUTINE_PRIORITIES -> Uygulama coroutine'leri için erişilebilir priority'lerin sayısını belirtmektedir. Herhangi sayıdaki
+  co-routine aynı priority'yi paylaşabilmektedir.Task'lar ayrıca önceliklendirilir(prioritised) - configMAX_PRIORITIES'i inceleyiniz.
+  
+  configUSE_TIMERS -> Yazılımsal timer fonksiyonalitesini kullanabilmek için 1 olarak ayarlanması gerekmektedir. Tam tanım için 
+  'FreeRTOS software timers' sayfasını inceleyiniz.
+  
+  configTIMER_TASK_PRIORITY -> Yazılımsal zamanlayıcı servis/daemon task'ın önceliği(priority)ni ayarlamak için ayarlanmaktadır.
+  Tam tanım için 'FreeRTOS software timers' sayfasını inceleyiniz.
+  
+  configTIMER_QUEUE_LENGTH -> Yazılımsal zamanlayıcı komut queue'sinin uzunluğunu ayarlamak için kullanılmaktadır. Tam tanım için 'FreeRTOS software timers' sayfasını inceleyiniz.
+  
+  configTIMER_TASK_STACK_DEPTH -> Yazılımsal zamanlayıcı servis/daemon task için stack derinlik yerleşimini ayarlamak için kullanılmaktadır.
+  
+  configKERNEL_INTERRUPT_PRIORITY
+  configMAX_SYSCALL_INTERRUPT_PRIORITY ve
+  configMAX_API_CALL_INTERRUPT_PRIORITY ->
 
   
