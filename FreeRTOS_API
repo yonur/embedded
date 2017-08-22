@@ -265,6 +265,60 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
     interruptlar gibi interruptlarda idealdir. Buna rağmen, böyle ISR'lar FreeRTOS API kullanamazlar.
   Bu şemadan faydalanabilmek için uygulama tasarımınız şu kurala bağımlı kalmak zorundadır: FreeRTOS API'yi kullanan herhangi bir interrupt
   RTOS kernel ile aynı priority'de olmalıdır, yada bu fonksiyonaliteyi içeren portlar configMAX_SYSCALL_INTERRUPT_PRIORITY  ile aynı yada daha düşük seviyede olmalıdır.
+  Cortex M3 ve Cortex M4'te bunun tersi bir durum geçerlidir. Yüksek öncelikli priority'nin rakam olarak değeri düşüktür. Yani en yüksek öncelikli
+  priority seviyesi 0'dır. 
+  
+  configASSERT -> configASSERT()'in yapısı genel olarak C'deki ASSERT() ile aynıdır. Eğer configASSERT()'e geçen parametre sıfır ise 
+  bir assertion meydana gelir.
+  Eğer kodun herhangi bir noktasında problem varsa kodun bu nokta durarak crash olmasını sağlamaktadır. Kod boyutunu arttırmaktadır. 
+  Eğer bu durum problem ise istenilen noktaladaki assert'ler comment out edilebilir.
+  Aşağıda örnek kullanımlar gösterilmiştir:
+  
+  /* Define configASSERT() to call vAssertCalled() if the assertion fails.  The assertion
+  has failed if the value of the parameter passed into configASSERT() equals zero. */
+  #define configASSERT( ( x ) )     if( ( x ) == 0 ) vAssertCalled( __FILE__, __LINE__ )
+  
+  /* Define configASSERT() to disable interrupts and sit in a loop. */
+  #define configASSERT( ( x ) )     if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
+  
+  configINCLUDE_APPLICATION_DEFINED_PRIVILEGED_FUNCTIONS -> Yalnızca FreeRTOS MPU'su tarafından kullanılır.
+  Eğer 1 olarak ayarlanmışsa kodlayıcı  uygulamayı yazanın priveleged modda çalıştırmaya ihtiyaç duyacağı fonksiyonları 
+  implemete edilebilmesi için "application_defined_privileged_functions.h" isminde bir başlık dosyası sağlamalıdır.
+  Bu bir başlık dosyası olmasına rağmen fonksiyonların sadece prototiplerini içermemelidir. Aynı zamanda implementasyonlarını da
+  içermelidir.
+  "application_defined_privileged_functions.h" başlık dosyasında implemente edilen fonksiyonlar 
+  prvRaisePrivilege() fonksiyonunu ve portRESET_PRIVILEGE() makrosunu kullanarak işlemcinin privelege state'ini kaydetmeli ve tekrar yüklemelidir.
+  Örneğin eğer kütüphanenin sağlamış olduğu kodu yazanın kontrolü dışında RAM'e ulaşan bir print fonksiyonu varsa ve bundan dolayı bu fonksiyon 
+  hafıza korumalı kullanıcı modundaki task'a yerleştirilemiyorsa, aşağıdaki kod örneği kullanılarak bu print fonksiyonu priveleged fonksiyonun
+  içerisine enkapsüle edilebilir.
+  void MPU_debug_printf( const char *pcMessage )
+  {
+    /* State the privilege level of the processor when the function was called. */
+    BaseType_t xRunningPrivileged = prvRaisePrivilege();
+
+    /* Call the library function, which now has access to all RAM. */
+    debug_printf( pcMessage );
+
+    /* Reset the processor privilege level to its original value. */
+    portRESET_PRIVILEGE( xRunningPrivileged );
+  }
+  
+  Bu teknik hafıza korumadan kaçınmak için yalnızca development esnasında kullanılmalıdır, deployment esnasında değil.
+  
+  INCLUDE Parameters -> INCLUDE ile başlayan makrolar uygulamanız tarafından sağlanmayan real time kernel'in bu komponentlerinin derlemenizin 
+  dışında kalmasını izin vermektedir. Bu durum RTOS'un sizin özel gömülü uygulamanızın ihtiyaç duyduğu RAM ve ROM'u kullanmamasını 
+  sağlamaktadır.
+  Her makro şu şekilde bir fomra sahiptir...
+  INCLUDE_FunctionName
+  ..buradaki FunctionName ibaresi opsiyonel olarak exclude edilebilen API fonksiyonunu (yada bir kısım fonksiyon setini) belirtmektedir.
+  Include için 1 olarak exclude için 0 olarak ayarlanmalıdır.
+  Örneğin vTaskDelete() API fonksiyonunu include etmek için:
+  #define INCLUDE_vTaskDelete    1
+  derlemeden exclude etmek için ise:
+  #define INCLUDE_vTaskDelete    0 
+  kullanılır.
+  
+  
   
   
   
