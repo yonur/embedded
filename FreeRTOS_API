@@ -116,5 +116,20 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   configUSE_QUEUE_SETS -> queue set fonksiyonalitesi içermesi için (çoklu queue ve semafor üzerindeki block, yada pend imkanı için) 1 olarak 
   ayarlanmaktadır.
   
-  configUSE_TIME_SLICING -> Varsayılanda 
+  configUSE_TIME_SLICING -> Varsayılanda (configUSE_TIME_SLICING tanımlanmamışsa yada 1 olarak tanımlanmışsa) FreeRTOS önceliklendirilmiş(prioritised) preempting scheduling'i time slicing ile 
+  birlikte kullanır. Bu durum RTOS scheduler her zaman hazır durumda olanlardan en yüksek öncelikli task'ı kullandığı durumdur, ve bütün RTOS tick interrupt'ında 
+  bütün eşit priority'li task'lar arasında anahtarlama yapmaktadır. Eğer configUSE_TIME_SLICING 0 olarak ayarlanırsa 
+  yine RTOS scheduler her zaman hazır durumda olanlardan en yüksek öncelikli task'ı kullanır fakat hazır durumdaki bütün eşit priority'li
+  task'lar arasında anahtarlama yapmamaktadır.
+  
+  configUSE_NEWLIB_REENTRANT -> Eğer configUSE_NEWLIB_REENTRANT 1 olarak ayarlanırsa bunu müteakip newlib reent yapısı her bir task 
+  için yerleştirilecektir.
+  
+  FreeRTOS newlib desteğini kendisi sağlamamaktadır. Bu sebeple kullanıcılar kullanım esnasında kendileri dikkat etmelidir.
+  
+  configENABLE_BACKWARD_COMPATIBILITY -> Eğer 0 olarak tanımlanırsa önceki versiyonlardan gelen veri tipleri dahil edilmemektedir.
+  
+  configNUM_THREAD_LOCAL_STORAGE_POINTERS -> Her bir task'ın thread local storage array'ı içerisindeki indekslerin sayısı ayarlanır.
+  
+  configSUPPORT_STATIC_ALLOCATION -> 
   
