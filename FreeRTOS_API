@@ -255,4 +255,20 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   ve bundan dolayı RTOS kernel çalışması tarafından geciktirilemezler.
   Örenğin, varsayımsal olarak 8 interrupt seviyesine sahip bir mikrokontrolör olsun. 0 en düşük ve 7 en yüksek priority seviyesi 
   olsun (cortex M3 ve M4'ün durumu biraz farklıdır. Bu mikrokontrolör ailelerinde en yüksek priority seviyesi en düşük numaralı priority'dir)
+  Bu konfigürasyon parametreleri çok esnek interrupt handling'e izin vermektedir:
+    - interrupt handling 'task'lar sistemdeki diğer task'lar gibi yazılabilir ve önceliklendirilebilir(prioritised). Bu tasklar interrupt
+    tarafından uyandırılabilir. ISR mümkün olduğunca kısa tutulur ve bitişinde mevcut handle edilmiş task'a geri dönülür.
+    - configMAX_SYSCALL_INTERRUPT_PRIORITY'yi implemente eden portlar işi bunun da ötesine götürüp bütünüyle RTOS kernel interrupt priority ile configMAX_SYSCALL_INTERRUPT_PRIORITY arasında
+    nested yapı kullanabilir ve uygulalanılabilir API çağırmaları icra edilebilir. configMAX_SYSCALL_INTERRUPT_PRIORITY üzerindeki priority seviyesindeki interruptlar RTOS kernel aktivites, ile geciktirilemezler.
+    - Maksimum syscall priority'si üzerindeki ISR çalışması RTOS kernelin kendi tarafından asla maskelemeden çıkarılamaz, bundan dolayı 
+    cevap verme süresi RTOS kernelin fonksiyonalitesi tarafından etkilenmez.Bu durum çok sık zaman aralığında gerçekleşen motor komitasyonu gerçekleşteren
+    interruptlar gibi interruptlarda idealdir. Buna rağmen, böyle ISR'lar FreeRTOS API kullanamazlar.
+  Bu şemadan faydalanabilmek için uygulama tasarımınız şu kurala bağımlı kalmak zorundadır: FreeRTOS API'yi kullanan herhangi bir interrupt
+  RTOS kernel ile aynı priority'de olmalıdır, yada bu fonksiyonaliteyi içeren portlar configMAX_SYSCALL_INTERRUPT_PRIORITY  ile aynı yada daha düşük seviyede olmalıdır.
+  
+  
+  
+  
+  
+  
   
