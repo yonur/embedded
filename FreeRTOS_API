@@ -331,7 +331,8 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   Source/Portable/MemMang dizisi altında bulunan heap_1.c, heap_2.c, heap_3.c, heap_4.c ve heap_5.c dosyaları ile hafıza yerleşim
   uygulama şemaları bulumaktadır. Bunlardan heap_5.c aşağıda açıklanmaktadır.
   
-  
+  heap_5.c: Bu şema heap_4.c gibi gibi serbest hafıza alanlarını bütünleştirmekte, fakat farklı olarak komşu olmayan hafıza alanlarını da
+  bütünleştirmektedir.
   
   
   
