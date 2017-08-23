@@ -331,12 +331,49 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   Source/Portable/MemMang dizisi altında bulunan heap_1.c, heap_2.c, heap_3.c, heap_4.c ve heap_5.c dosyaları ile hafıza yerleşim
   uygulama şemaları bulumaktadır. Bunlardan heap_5.c aşağıda açıklanmaktadır.
   
-  heap_5.c: Bu şema heap_4.c gibi gibi serbest hafıza alanlarını bütünleştirmekte, fakat farklı olarak komşu olmayan hafıza alanlarını da
-  bütünleştirmektedir.
+  heap_5.c: Bu şema heap_4.c gibi gibi serbest hafıza alanlarını bütünleştirmekte, fakat farklı olarak komşu olmayan 
+  hafıza alanlarını da bütünleştirmektedir.
+  Heap_5 vPortHeapDefineRegions() çağırılarak ilklendirilir, ve vPortDefineHeapRegions() çalıştıktan sonra kullanılamaz.
+  RTOS objesinin yaratılması(task, queue, semaphore v.b.) dolaylı olarak pvPortMalloc() fonksiyonunu çağıracaktır bundan dolayı
+  heap_5 kullanılırken böyle bir nesne yaratılmadan önce vPortDefineHeapRegions()'ın çağırılması esas teşkil etmektedir.
+  vPortDefineHeapRegions() tek bir parametre almaktadır. 
+  RTOS nesnesi tek bir parametre alır. Bu parametre HeapRegion_t structure'ı türünden elemanlardan oluşan bir dizidir.
   
+  typedef struct HeapRegion
+  {
+      /* Start address of a block of memory that will be part of the heap.*/
+      uint8_t *pucStartAddress;
+
+      /* Size of the block of memory. */
+      size_t xSizeInBytes;
+  } HeapRegion_t;
+
+  /* Allocate two blocks of RAM for use by the heap.  The first is a block of
+  0x10000 bytes starting from address 0x80000000, and the second a block of
+  0xa0000 bytes starting from address 0x90000000.  The block starting at
+  0x80000000 has the lower start address so appears in the array fist. */
+  const HeapRegion_t xHeapRegions[] =
+  {
+      { ( uint8_t * ) 0x80000000UL, 0x10000 },
+      { ( uint8_t * ) 0x90000000UL, 0xa0000 },
+      { NULL, 0 } /* Terminates the array. */
+  };
+
+  /* Pass the array into vPortDefineHeapRegions(). */
+  vPortDefineHeapRegions( xHeapRegions );
   
+  vPortDefineHeapRegions'a parametre olarak geçen bu dizi NULL ile sonlandırılmaktadır, ve hafıza alanları düşük adresten yüksek adrese 
+  doğru adres sırasıyla bulunmalıdır.
+  xPortGetFreeHeapSize() API fonksiyonu çağırıldığında yerleştirilmemiş olarak kalmış heap hafıza alanlarını dönmekte, ve 
+  xPortGetMinimumEverFreeHeapSize() fonksiyonu enküçük boştaki heap alanını FreeRTOS uygulaması boot edildiğinde dönmektedir.
+  Hiç bir fonksiyon yelrleştirilmemiş küçük bloklara segmente edilmiş heap alanları hakkında bilgi vermemektedir.
   
-  
+  STACK OVERFLOW TESPİTİ:
+  Stack kullanımı ve Stack Overflow Kontrolü: Her task kendi stack'ını sürdürür. Eğer task xTaskCreate() kullanarak yaratılmışsa
+  task'in stack'i olarak kullanılan hafıza alanı FreeRTOS heap'ten otomatik olarak atanır, ve xTaskCreate() API fonksiyonuna geçen
+  parametre ile boyutu belirtilmektedir.
+  Eğer task xTaskCreateStatic() kullanılarak yaratılıyorsa task'in stack'i olarak kullanılan hafıza alanı uygulamayı kodlayan 
+  tarafından yaratılır. Stack overflow genel olarak görülen bir uygulama kararsız çalışma sebeplerindendir.
   
   
   
