@@ -1,7 +1,9 @@
-                                            KONFİGÜRASYON PARAMETRELERİ
+                                                KONFİGÜRASYON
+KUSTOMİZASYON:
 Bu parametreler birer macro(define)'dur. Tanım değerine göre FreeRTOS farklı konfigürasyona ayarlanabilmektedir.
 
-configUSE_PREEMPTION -> Eğer 1 olarak tanımlanırsa preemptive RTOS scheduler, 0 olarak tanımlanırsa cooperative RTOS scheduler kullanılacaktır.
+configUSE_PREEMPTION -> Eğer 1 olarak tanımlanırsa preemptive RTOS scheduler, 0 olarak tanımlanırsa 
+cooperative RTOS scheduler kullanılacaktır.
 
 configUSE_PORT_OPTIMISED_TASK_SELECTION -> Bazı FreeRTOS portlarının bir sonraki task'ın çalışması için seçebileceği 2 method bulunmaktadır.
 Bu methodlar, generic method ve bu porta özel olan methoddur. 
@@ -319,6 +321,12 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   kullanılır.
   
   
+  HAFIZA YÖNETİMİ:
+  RTOS kerneli her task, queue, mutex, software timer, semafor yada event group yaratıldığında RAM'e ihtiyaç duymaktadır.
+  RAM RTOS heap'inden otomatik olarak RTOS API'si nesne yaratma fonksiyonları ile otomatik olarak yada uygulamayı kodlayan 
+  tarafından yaratılabilmektedir. 
+  FreeRTOS portable katmanında API hafıza tahsisini icra etmektedir. Portable katman kaynak kodun dışında olup çekirdek RTOS 
+  fonksiyonalitesini uygulamalta olur, ve 
   
   
   
