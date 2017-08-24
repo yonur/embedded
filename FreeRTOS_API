@@ -817,6 +817,9 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
  Bilgi almak için vTaskSuspendAll() RTOS API fonksiyonuna bakınız.
  
  Eğer kullanılmakta olan FreeRTOS portu configMAX_SYSCALL_INTERRUPT_PRIORITY (configMAX_API_CALL_INTERRUPT_PRIORITY olarak da çağırılır)
- kernel konfigürasyon
- sabitinden faydalanmıyorsa, taskENTER_CRITICAL() i çağırmak interruptlari global olarak
-etkisizleştirir.
+ kernel konfigürasyon sabitinden faydalanmıyorsa, taskENTER_CRITICAL() i çağırmak interruptlari global olarak
+ etkisizleştirir.
+ 
+ Eğer kullanılan FreeRTOS portu configMAX_SYSCALL_INTERRUPT_PRIORITY'ten faydalanıyorsa, sonrasında 
+ taskENTER_CRITICAL() çağırılmasıyla configMAX_SYSCALL_INTERRUPT_PRIORITY tarafından ayarlanan interrupt priority'sinin
+ Seviyesindeki ve bu seviyenin altındaki priority deki interruptlar etkisizleştirilecektir.
