@@ -822,4 +822,13 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
  
  Eğer kullanılan FreeRTOS portu configMAX_SYSCALL_INTERRUPT_PRIORITY'ten faydalanıyorsa, sonrasında 
  taskENTER_CRITICAL() çağırılmasıyla configMAX_SYSCALL_INTERRUPT_PRIORITY tarafından ayarlanan interrupt priority'sinin
- Seviyesindeki ve bu seviyenin altındaki priority deki interruptlar etkisizleştirilecektir.
+ Seviyesindeki ve bu seviyenin altındaki priority deki interruptlar etkisizleştirilecek, daha yüksek priority seviyeli interruptlar
+ etkinleştirilecektir.
+ Preemptive context switch'ler sadece interrupt'ların içinde olur, bundan dolayı interruptlar etkisizleştirildiğinde oluşmayacaklardır.
+ Bundan dolayı taskENTER_CRITICAL'ı çağırmış olan task direk olarak
+ block yada yield(critical section'ın içerisinden olmaması gerekir) eylemlerini icra etmeye kalkışmadıkça, critical section sona erene kadar
+ running state'te kalmayı garanti eder.
+ taskENTER_CRITICAL() ve taskEXIT_CRITICAL() çağırılması nest eyleminde çalışacak şekilde tasarlanmıştır.
+ Bundan dolayı bir critical section yalnız öncesinde bir 
+ taskENTER_CRITICAL() çağırılmış bir çalışmış olan taskEXIT_CRITICAL() çağırıldığında olmaktadır.
+taskE
