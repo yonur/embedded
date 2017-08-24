@@ -713,3 +713,13 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
    Bir yada birden fazla vTaskSuspend() ile askıya alınmış olan bit taskın takrar çalışması için 1 kere vTaskResumeFromISR() fonksiyonunun
    çağırılması yeterlidir.
    Bu fonksiyon genelde tehlikeli bir fonksiyon olarak görülür çünkü çalışması latch edilmiş değildir. 
+   
+   Bu nedenle, görevin askıya alınmasından önce kesmenin gelebileceği ve dolayısıyla kesmenin kaybolduğu bir task'ı,
+   bir kesme ile senkronize etmek için kesinlikle kullanılmamalıdır.
+   Semafor kullanımı, yada direct to task notification'ın tercih edilmesi bu durumdan kaçınılmasını sağlayacaktır.
+   Parametreler: 
+    xTaskToResume: Okunan task'ın tutlmasını sağlamaktadır.
+   Geri Dönüş Değerleri: 
+    Eğer devam eden task context switch içerisinde sonuç vermesi gerekiyorsa pdTRUE, aksi halde pdFALSE geri dönüş değeri olacaktır.
+    Bu geri dönüş değeri ISR tarafından müteakip ISR tarafından context switch'e gerek duyulup duyulmadığını belirlemek için kullanılacaktır.
+   
