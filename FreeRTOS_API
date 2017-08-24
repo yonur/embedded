@@ -564,4 +564,152 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
            }
        }
       
-  
+  uxTaskPriorityGet: task.h basşlık dosyasında bulunmaktadır. Aşağıdaki şekilde kullanılmaktadır:
+    UBaseType_t uxTaskPriorityGet( TaskHandle_t xTask );
+  Bu fonksiyonun erişilebilir olması için INCLUDE_uxTaskPriorityGet 'nin 1 olarak tanımlanması gerekir. RTOS konfigürasyon dokümanını
+  inceleyiniz.
+  Task'ın priority'sini elde etmek için kullanılır.
+  Parametreler: 
+    xTask: İstemde bulunulmuş task'ın handle'ıdır.
+  Dönüş değeri:
+    xTask'ın priority'sidir.
+   
+   Örnek Kullanım:  
+    void vAFunction( void )
+   {
+   TaskHandle_t xHandle;
+
+       // Create a task, storing the handle.
+       xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, &xHandle );
+
+       // ...
+
+       // Use the handle to obtain the priority of the created task.
+       // It was created with tskIDLE_PRIORITY, but may have changed
+       // it itself.
+       if( uxTaskPriorityGet( xHandle ) != tskIDLE_PRIORITY )
+       {
+           // The task has changed its priority.
+       }
+
+       // ...
+
+       // Is our priority higher than the created task?
+       if( uxTaskPriorityGet( xHandle ) < uxTaskPriorityGet( NULL ) )
+       {
+           // Our priority (obtained using NULL handle) is higher.
+       }
+   }
+   
+   vTaskPrioritySet: task.h başlık dosyasında bulunmaktadır. Aşağıdaki gibi kullanılmaktadır:
+    void vTaskPrioritySet( TaskHandle_t xTask, UBaseType_t uxNewPriority );
+   Bu fonksiyonun erişilebilir olabilmesi için INCLUDE_vTaskPrioritySet 1 olarak ayarlanmalıdır. Daha çok bilgi için RTOS
+   Configuration dokümanını inceleyiniz.
+   Herhangi bir task'ın priority'sini ayarlamak için kullanılmaktadır.
+   Eğer priority halihazırda çalışan task'tan daha yüksek seviyede ayarlanırsa context switch fonksiyon geri dönüşünden önce olur.
+   Parametreler: 
+    xTask: Priority'sinin set edileceği task'ı tutmaktadır. Eğer NULL değeri tutulmuşsa bir önceki priority'si set edilen task'ın
+    priority'sini günceller.
+    uxNewPriority: Priority'si ayarlanacak task'ın yeni ayarlanan priority değeridir.
+    Örnek Kullanımı:
+       void vAFunction( void )
+       {
+       TaskHandle_t xHandle;
+
+           // Create a task, storing the handle.
+           xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, &xHandle );
+
+           // ...
+
+           // Use the handle to raise the priority of the created task.
+           vTaskPrioritySet( xHandle, tskIDLE_PRIORITY + 1 );
+
+           // ...
+
+           // Use a NULL handle to raise our priority to the same value.
+           vTaskPrioritySet( NULL, tskIDLE_PRIORITY + 1 );
+       }
+     
+    vTaskSuspend: task.h başlık dosyasında yer almaktadır. Örnek kullanımı aşağıda gösterilmiştir:
+      void vTaskSuspend( TaskHandle_t xTaskToSuspend );
+    Bu fonksiyona erişilebilmesi için INCLUDE_vTaskSuspend 1 olarak ayarlanmalıdır. Daha fazla bilgi için RTOS Configuration 
+    dokümanını inceleyiniz.
+    Herhangi bir taskı askıya alabilir(suspend). Bir task askıya alondığında priority'si ne olursa olsun mikrokontrolör'ün 
+    çalışma(processing) zamanını asla almaz.
+    vTaskSuspend'in çağrılıması biriktirici değildir - örneğin vTaskSuspend()'in aynı task'ta 2 kere çağırılması durumunda 
+    askıda olan bu taskın tekrar çalışmaya başlaması için vTaskResume()'in 1 kere çağırılması yeterlidir. 2 kere çağırılmasına gerek
+    yoktur.
+    Parametreler: 
+      xTaskToSuspend: Askıda olan taskı tutan parametredir. NULL değerini tutması durumunda üzerinde önceden çalışılmakta olan
+    task'ın yine askıya alınmasını sağlamaktadır.
+    Örnek Kullanım:
+      void vAFunction( void )
+     {
+     TaskHandle_t xHandle;
+
+         // Create a task, storing the handle.
+         xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, &xHandle );
+
+         // ...
+
+         // Use the handle to suspend the created task.
+         vTaskSuspend( xHandle );
+
+         // ...
+
+         // The created task will not run during this period, unless
+         // another task calls vTaskResume( xHandle ).
+
+         //...
+
+         // Suspend ourselves.
+         vTaskSuspend( NULL );
+
+         // We cannot get here unless another task calls vTaskResume
+         // with our handle as the parameter.
+     }
+     
+   vTaskResume: task.h başlık dosyasında bulunmaktadır. Örnek kullanımı aşağıda gösterilmiştir:
+    void vTaskResume( TaskHandle_t xTaskToResume );
+   Bu fonksiyonun erişilebilir olması için INCLUDE_vTaskSuspend'in 1 olarak tanımlanması gerekir. Daha fazla bilgi için 
+   RTOS Configuration dokümanını inceleyiniz.
+   Askıya alınmış bir task'ın devam etmesini sağlamaktadır.
+   Bir yada birden daha fazla vTaskSuspended() fonksiyonu ile askıya alınmış bir taskın tekrar çalışmaya başlaması için 
+   bir kere vTaskResume() fonksiyonunun çağırılması yeterelidir.
+   Parametreler: 
+    xTaskToResume: Okunmuş olan taskı tutmaktadır.
+   Örnek Kullanımı: 
+   
+     void vAFunction( void )
+     {
+     TaskHandle_t xHandle;
+
+         // Create a task, storing the handle.
+         xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, &xHandle );
+
+         // ...
+
+         // Use the handle to suspend the created task.
+         vTaskSuspend( xHandle );
+
+         // ...
+
+         // The created task will not run during this period, unless
+         // another task calls vTaskResume( xHandle ).
+
+         //...
+
+         // Resume the suspended task ourselves.
+         vTaskResume( xHandle );
+
+         // The created task will once again get microcontroller processing
+         // time in accordance with its priority within the system.
+     }
+   xTaskResumeFromISR: task.h başlık dosyasında bulunmaktadır. Örnek kullanımı aşağıda verilmiştir:
+    BaseType_t xTaskResumeFromISR( TaskHandle_t xTaskToResume );
+   Bu fonksiyonun erişilebilir olaması için INCLUDE_vTaskSuspend ve INCLUDE_xTaskResumeFromISR 1 olarak ayarlanmalıdır.Daha fazla
+   bilgi için RTOS Configuration dokümanına bakınız.
+   ISR içerisinde çağırılabilen askıda olan bir task'ın tekrar çağırılmasını sağlayan bir fonksiyondur.
+   Bir yada birden fazla vTaskSuspend() ile askıya alınmış olan bit taskın takrar çalışması için 1 kere vTaskResumeFromISR() fonksiyonunun
+   çağırılması yeterlidir.
+   Bu fonksiyon genelde tehlikeli bir fonksiyon olarak görülür çünkü çalışması latch edilmiş değildir. 
