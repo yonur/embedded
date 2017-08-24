@@ -722,4 +722,58 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
    Geri Dönüş Değerleri: 
     Eğer devam eden task context switch içerisinde sonuç vermesi gerekiyorsa pdTRUE, aksi halde pdFALSE geri dönüş değeri olacaktır.
     Bu geri dönüş değeri ISR tarafından müteakip ISR tarafından context switch'e gerek duyulup duyulmadığını belirlemek için kullanılacaktır.
-   
+   Örnek kullanım aşağıda gösteriilmiştir:
+    TaskHandle_t xHandle;
+
+     void vAFunction( void )
+     {
+         // Create a task, storing the handle.
+         xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, &xHandle );
+
+         // ... Rest of code.
+     }
+
+     void vTaskCode( void *pvParameters )
+     {
+         // The task being suspended and resumed.
+         for( ;; )
+         {
+             // ... Perform some function here.
+
+             // The task suspends itself.
+             vTaskSuspend( NULL );
+
+             // The task is now suspended, so will not reach here until the ISR resumes it.
+         }
+     }
+
+
+     void vAnExampleISR( void )
+     {
+     BaseType_t xYieldRequired;
+
+         // Resume the suspended task.
+         xYieldRequired = xTaskResumeFromISR( xHandle );
+
+         if( xYieldRequired == pdTRUE )
+         {
+             // We should switch context so the ISR returns to a different task.
+             // NOTE:  How this is done depends on the port you are using.  Check
+             // the documentation and examples for your port.
+             portYIELD_FROM_ISR();
+         }
+     }
+  
+  xTaskAbortDelay: task.h başlık dosyasında bulunmaktadır. Örnek kullanımı aşağıda verilmiştir:
+    BaseType_t xTaskAbortDelay( TaskHandle_t xTask );
+  Blocked State'ten ayrılınması için zorlar ve blocked state'teki beklenen event gerçekleşmemiş ve belirtilen 
+  timeout aşılmamış olsa bile Ready State'e sokar.
+  Bu fonksiyonun erişilebilmesi için INCLUDE_xTaskAbortDelay  1 olarak ayarlanmalıdır. Daha fazla bilgi için RTOS Configuration
+  dokümanına bakınız.
+  Parametreler: 
+    xTask: Blocked State'ten çıkması için zorlanan task'ı tutmaktadır.
+    Bir task handle yaratımının elde edilmesi için xTaskCreate() fonksiyonu kulanılır ve xTaskCreate() fonksiyonunun
+    pxCreatedTask parametresinden faydalanılır, yada xTaskCreateStatic() kullanılarak task yaratılır ve geri dönüş değeri 
+    kaydedilir, yada xTaskGetHandle() fonksiyonu çağırımındaki task'ın ismi kullanılır.
+  Geri Dönüş Değerleri: Eğer xTask tarafından referans edilen task Blocked State'de değilse pdFAIL geri döner. Aksi halde 
+  pdPASS geri döner.
