@@ -793,5 +793,8 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
  taskDISABLE_INTERRUPTS ya bütün interruptları etkisizleştirecek
  yada configMAX_SYSCALL_INTERRUPT_PRIORITY nin daha üstündeki seviyedeki interruptları
  maskeler (etkisizleştirir).
- taskDISABLE_INTERRUPTS'ın port için kullanımsal uygulamalarını kontrol ediniz.
+ taskDISABLE_INTERRUPTS'ın port için kullanım uygulamalarını kontrol ediniz.
+ Eğer kullanımdaki port configMAX_SYSCALL_INTERRUPT_PRIORITY  sabitini desteklemiyorsa
+ taskDISABLE_INTERRUPTS global olarak bütün maskable interrupt(kesme) ları etkisizleştirir(disable).
+ 
  
