@@ -797,4 +797,26 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
  Eğer kullanımdaki port configMAX_SYSCALL_INTERRUPT_PRIORITY  sabitini desteklemiyorsa
  taskDISABLE_INTERRUPTS global olarak bütün maskable interrupt(kesme) ları etkisizleştirir(disable).
  
+ Normalde bu makro direk olarak çağırılmamalı ve onun yerine
+ and taskENTER_CRITICAL() ve taskEXIT_CRITICAL() kullanılmalıdır.
  
+ taskENABLE_INTERRUPTS:
+ 
+ Mikrokontrölor interruptlarinı etkinleştirmek için kullanılır.
+ Normalde bu makro direk olarak çağırılmamalı ve onun yerine
+ and taskENTER_CRITICAL() ve taskEXIT_CRITICAL() kullanılmalıdır.
+ 
+ taskENTER_CRITICAL() 
+ taskEXIT_CRITICAL():
+ Critical section'lara taskENTER_CRITICAL çağırılarak girilir ve 
+ bilahere taskEXIT_CRITICAL() çağırılarak çıkılır.
+ taskENTER_CRITICAL() ve taskEXIT_CRITICAL() global olarak yada belirlenmiş
+ bir seviyedeki interrupt priority'sinin üstündeki interruptlari etkisizleştirerek çalışan
+ basit bir critical section uygulaması sağlamaktadir.
+ Interruptları etkisizleştirmeden bir critical section yaratılması hakkında
+ Bilgi almak için vTaskSuspendAll() RTOS API fonksiyonuna bakınız.
+ 
+ Eğer kullanılmakta olan FreeRTOS portu configMAX_SYSCALL_INTERRUPT_PRIORITY (configMAX_API_CALL_INTERRUPT_PRIORITY olarak da çağırılır)
+ kernel konfigürasyon
+ sabitinden faydalanmıyorsa, taskENTER_CRITICAL() i çağırmak interruptlari global olarak
+etkisizleştirir.
