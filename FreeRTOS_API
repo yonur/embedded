@@ -792,5 +792,6 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
  kullanımını destekliyorsa  (yada configMAX_API_CALL_INTERRUPT_PRIORITY)
  taskDISABLE_INTERRUPTS ya bütün interruptları etkisizleştirecek
  yada configMAX_SYSCALL_INTERRUPT_PRIORITY nin daha üstündeki seviyedeki interruptları
- etkisizleştirir.
+ maskeler (etkisizleştirir).
+ taskDISABLE_INTERRUPTS'ın port için kullanımsal uygulamalarını kontrol ediniz.
  
