@@ -788,4 +788,9 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   En yüksek priorityli taskı çalıştırır. Böyle bir durumda taskYIELD asla
   daha yüksek priorityli bir taska context switch yapamaz
   
-  
+  taskDISABLE_INTERRUPTS: Eğer portun kullanımı configMAX_SYSCALL_INTERRUPT_PRIORITY
+ kullanımını destekliyorsa  (yada configMAX_API_CALL_INTERRUPT_PRIORITY)
+ taskDISABLE_INTERRUPTS ya bütün interruptları etkisizleştirecek
+ yada configMAX_SYSCALL_INTERRUPT_PRIORITY nin daha üstündeki seviyedeki interruptları
+ etkisizleştirir.
+ 
