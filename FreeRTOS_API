@@ -892,3 +892,80 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   ISR'da critical section'a taskENTER_CRITICAL_FROM_ISR() fonksiyonu çağırılarak ile girmekte ve buna müteakip taskEXIT_CRITICAL_FROM_ISR()
   fonksiyonu ile critical section ile çıkmaktadır.
 
+  The taskENTER_CRITICAL_FROM_ISR() ve taskEXIT_CRITICAL_FROM_ISR() makroları interruptları global olarak yada 
+  belirli bir priority seviyesinin üstündeki interruptları etkisizleştirerek basit bir critical section uygulaması sağlamaktadır.
+  Eğer kullanılmakta olan FreeRTOS port'u nesting interrupt'ı destekliyorsa, taskENTER_CRITICAL_FROM_ISR() 
+  configMAX_SYSCALL_INTERRUPT_PRIORITY (yada configMAX_API_CALL_INTERRUPT_PRIORITY) kernel konfigürasyon sabiti ile ayarlanan 
+  interrupt priority'sinin seviyesindeki ve bu seviyenin altındaki seviyelerdeki interrupt'ları etkisizleştirecek, 
+  diğer bütün interrupt priority'lerini etkinleştirecektir.
+  taskENTER_CRITICAL_FROM_ISR() ve taskEXIT_CRITICAL_FROM_ISR() çağırılması nest yapıdadır, 
+  fakat bu makroların nasıl kullanılacaklarının anlamsallıkları(semantics - semantikler) 
+  taskENTER_CRITICAL() ve taskEXIT_CRITICAL() eşdeğerlerinden farklıdır.
+  FreeRTOS API fonksiyonları critical section içerisinden çağırılmalıdır.
+  Parametreler: 
+    taskEXIT_CRITICAL_FROM_ISR() uxSavedinterruptStatus'ı yalnızca parametre olarak almalıdır. uxSavedinterruptStatus parametesinin değeri
+    taskENTER_CRITICAL_FROM_ISR() fonksiyonunun geri dönüş değerini almalıdır.
+    taskENTER_CRITICAL_FROM_ISR() herhangi bir parametre almaz.
+    
+    Geri Dönüş Değerleri:
+    taskENTER_CRITICAL_FROM_ISR() makronun çağırılmasından önceki interrupt mask state'i geri dönmektedir.  
+    taskENTER_CRITICAL_FROM_ISR() makrosunun geri dönüş değeri taskENTER_CRITICAL_FROM_ISR()'nin eşi olan taskEXIT_CRITICAL_FROM_ISR()
+    makrosunun uxSavedInterruptStatus parametresinin değeri olarak kullanılmalıdır.
+    taskEXIT_CRITICAL_FROM_ISR() herhangi bir değer geri dönmez.
+    
+    Örnek Kullanım: 
+    
+    /* A function called from an ISR. */
+    void vDemoFunction( void )
+    {
+    UBaseType_t uxSavedInterruptStatus;
+
+        /* Enter the critical section.  In this example, this function is itself called from
+        within a critical section, so entering this critical section will result in a nesting
+        depth of 2. Save the value returned by taskENTER_CRITICAL_FROM_ISR() into a local
+        stack variable so it can be passed into taskEXIT_CRITICAL_FROM_ISR(). */
+        uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
+
+        /* Perform the action that is being protected by the critical section here. */
+
+        /* Exit the critical section.  In this example, this function is itself called from a
+        critical section, so interrupts will have already been disabled before a value was
+        stored in uxSavedInterruptStatus, and therefore passing uxSavedInterruptStatus into
+        taskEXIT_CRITICAL_FROM_ISR() will not result in interrupts being re-enabled. */
+        taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );
+    }
+
+    /* A task that calls vDemoFunction() from within an interrupt service routine. */
+    void vDemoISR( void )
+    {
+    UBaseType_t uxSavedInterruptStatus;
+
+        /* Call taskENTER_CRITICAL_FROM_ISR() to create a critical section, saving the
+        returned value into a local stack variable. */
+        uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
+
+
+        /* Execute the code that requires the critical section here. */
+
+
+        /* Calls to taskENTER_CRITICAL_FROM_ISR() can be nested so it is safe to call a
+        function that includes its own calls to taskENTER_CRITICAL_FROM_ISR() and
+        taskEXIT_CRITICAL_FROM_ISR(). */
+        vDemoFunction();
+
+        /* The operation that required the critical section is complete so exit the
+        critical section.  Assuming interrupts were enabled on entry to this ISR, the value
+        saved in uxSavedInterruptStatus will result in interrupts being re-enabled.*/
+        taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );
+    }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
