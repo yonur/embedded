@@ -777,7 +777,7 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
     kaydedilir, yada xTaskGetHandle() fonksiyonu çağırımındaki task'ın ismi kullanılır.
   Geri Dönüş Değerleri: Eğer xTask tarafından referans edilen task Blocked State'de değilse pdFAIL geri döner. Aksi halde 
   pdPASS geri döner.
-  
+                                                RTOS KERNEL CONTROL
   taskYIELD:
   Başka bir taska context switch yapılması için
   talepte bulunmak için kullanılıyor.
@@ -789,16 +789,16 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   daha yüksek priorityli bir taska context switch yapamaz
   
   taskDISABLE_INTERRUPTS: Eğer portun kullanımı configMAX_SYSCALL_INTERRUPT_PRIORITY
- kullanımını destekliyorsa  (yada configMAX_API_CALL_INTERRUPT_PRIORITY)
- taskDISABLE_INTERRUPTS ya bütün interruptları etkisizleştirecek
- yada configMAX_SYSCALL_INTERRUPT_PRIORITY nin daha üstündeki seviyedeki interruptları
- maskeler (etkisizleştirir).
- taskDISABLE_INTERRUPTS'ın port için kullanım uygulamalarını kontrol ediniz.
- Eğer kullanımdaki port configMAX_SYSCALL_INTERRUPT_PRIORITY  sabitini desteklemiyorsa
- taskDISABLE_INTERRUPTS global olarak bütün maskable interrupt(kesme) ları etkisizleştirir(disable).
- 
- Normalde bu makro direk olarak çağırılmamalı ve onun yerine
- and taskENTER_CRITICAL() ve taskEXIT_CRITICAL() kullanılmalıdır.
+   kullanımını destekliyorsa  (yada configMAX_API_CALL_INTERRUPT_PRIORITY)
+   taskDISABLE_INTERRUPTS ya bütün interruptları etkisizleştirecek
+   yada configMAX_SYSCALL_INTERRUPT_PRIORITY nin daha üstündeki seviyedeki interruptları
+   maskeler (etkisizleştirir).
+   taskDISABLE_INTERRUPTS'ın port için kullanım uygulamalarını kontrol ediniz.
+   Eğer kullanımdaki port configMAX_SYSCALL_INTERRUPT_PRIORITY  sabitini desteklemiyorsa
+   taskDISABLE_INTERRUPTS global olarak bütün maskable interrupt(kesme) ları etkisizleştirir(disable).
+
+   Normalde bu makro direk olarak çağırılmamalı ve onun yerine
+   and taskENTER_CRITICAL() ve taskEXIT_CRITICAL() kullanılmalıdır.
  
  taskENABLE_INTERRUPTS:
  
@@ -831,4 +831,64 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
  taskENTER_CRITICAL() ve taskEXIT_CRITICAL() çağırılması nest eyleminde çalışacak şekilde tasarlanmıştır.
  Bundan dolayı bir critical section yalnız öncesinde bir 
  taskENTER_CRITICAL() çağırılmış bir çalışmış olan taskEXIT_CRITICAL() çağırıldığında olmaktadır.
-taskE
+ Critical Sections çok kısa tutulcaktır, aksi halde interrupt cevap sürelerini olumsuz olarak etkileyeceklerdir.
+ Her bir taskENTER_CRITICAL() taskEXIT_CRITICAL() ile yakın olarak birlikte ele alınmalıdır.
+ FreeRTOS API fonksiyonları critical section içerisinden çağırılmamalıdır.
+ taskENTER_CRITICAL() ve taskEXIT_CRITICAL() interrupt service routine(ISR)'den çağırılmamalıdır - interrupt güvenliği için
+ bu fonksiyonların muadili olan  taskENTER_CRITICAL_FROM_ISR() ve taskEXIT_CRITICAL_FROM_ISR() fonksiyonlarına bakınız.
+ Parametreleri: Yoktur.
+ Geri Dönüş Değerleri: Yoktur.
+ 
+ Örnek Kullanımı: 
+ /* A function that makes use of a critical section. */
+  void vDemoFunction( void )
+  {
+      /* Enter the critical section.  In this example, this function is itself called
+      from within a critical section, so entering this critical section will result
+      in a nesting depth of 2. */
+      taskENTER_CRITICAL();
+
+      /* Perform the action that is being protected by the critical section here. */
+
+      /* Exit the critical section.  In this example, this function is itself called
+      from a critical section, so this call to taskEXIT_CRITICAL() will decrement the
+      nesting count by one, but not result in interrupts becoming enabled. */
+      taskEXIT_CRITICAL();
+  }
+
+  /* A task that calls vDemoFunction() from within a critical section. */
+  void vTask1( void * pvParameters )
+  {
+      for( ;; )
+      {
+          /* Perform some functionality here. */
+
+          /* Call taskENTER_CRITICAL() to create a critical section. */
+          taskENTER_CRITICAL();
+
+
+          /* Execute the code that requires the critical section here. */
+
+
+          /* Calls to taskENTER_CRITICAL() can be nested so it is safe to call a
+          function that includes its own calls to taskENTER_CRITICAL() and
+          taskEXIT_CRITICAL(). */
+          vDemoFunction();
+
+          /* The operation that required the critical section is complete so exit the
+          critical section.  After this call to taskEXIT_CRITICAL(), the nesting depth
+          will be zero, so interrupts will have been re-enabled. */
+          taskEXIT_CRITICAL();
+      }
+  }
+ 
+ taskENTER_CRITICAL_FROM_ISR() 
+ taskEXIT_CRITICAL_FROM_ISR():
+ Örnek kullanımı aşağıda gösterilmiştir:  
+  UBaseType_t taskENTER_CRITICAL_FROM_ISR( void );
+  void taskEXIT_CRITICAL_FROM_ISR( UBaseType_t uxSavedInterruptStatus );
+  
+  taskENTER_CRITICAL() ve taskEXIT_CRITICAL()'nin ISR'de kullanılabilen versiyonlarıdır.
+  ISR'da critical section'a taskENTER_CRITICAL_FROM_ISR() fonksiyonu çağırılarak ile girmekte ve buna müteakip taskEXIT_CRITICAL_FROM_ISR()
+  fonksiyonu ile critical section ile çıkmaktadır.
+
