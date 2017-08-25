@@ -1029,8 +1029,47 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   
   vTaskSuspendAll: Örnek kullanımı aşağıda gösterilmiştir.
     void vTaskSuspendAll( void );
+ Interrupt'ları(kesmeler) etkisizleştirmeksizin scheduler'i askıya almaktadır. Scheduler askıya alınırken context switch'ler 
+ oluşmayacaktır. Scheduler askıdayken oluşan RTOS tick'ler scheduler xTaskResumeAll()'i kullanarak askıdan çıkana kadar pending'i
+ tutacaktır. 
+ Context switch'e sebep olma potansiyeli olan API fonksiyonları(örneğin, vTaskDelayUntil(), xQueueSend(), v.b.) scheduler askıdayken
+ çağırılmamalıdır.
+ 
+ Örnek Kullanımı:
+  void vTask1( void * pvParameters )
+   {
+       for( ;; )
+       {
+           // Task code goes here.
+
+           // ...
+
+           // At some point the task wants to perform a long operation during
+           // which it does not want to get swapped out.  It cannot use
+           // taskENTER_CRITICAL ()/taskEXIT_CRITICAL () as the length of the
+           // operation may cause interrupts to be missed - including the
+           // ticks.
+
+           // Prevent the RTOS kernel swapping out the task.
+           vTaskSuspendAll ();
+
+           // Perform the operation here.  There is no need to use critical
+           // sections as we have all the microcontroller processing time.  
+           // During this time interrupts will still operate and the RTOS kernel 
+           // tick count will be maintained.
+
+           // ...
+
+           // The operation is complete.  Restart the RTOS kernel.
+           xTaskResumeAll ();
+       }
+   }
+ 
+  xTaskResumeAll: Örnek kullanımı aşağıda gösterilmiştir: 
+    BaseType_t xTaskResumeAll( void );
+  vTaskSuspendAll() çağırılarak kullanılmasıyla askıya alındıktan sonra scheduler'in çalışmaya devam ettirir.
   
-  
+  xTask
   
   
   
