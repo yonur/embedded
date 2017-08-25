@@ -959,8 +959,76 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
         taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );
     }
   
+  vTaskStartScheduler: Örnek kulanımı aşağıda gösterilmiştir.
+    void vTaskStartScheduler( void );
+  RTOS scheduler başlatılır. RTOS scheduler çalışmaya başladoktan sonra hangi hangi task'ın çalışacağının ve ne zaman çalışacağının 
+  kontrolünü ele almaktadır.
+  RTOS scheduler çalışmaya başladığında idle task ve opsiyonel olarak timer daemon task otomatik olarak yaratılır.
+  Yalnız eğer idle yada daemon task'ları yaratmak için erişilebilir RTOS heap yetersiz ise vTaskStartScheduler() geri dönecektir.
+  Bütün vTaskStartScheduler() kullanımının örneğini içeren RTOS demo uygulama projeleri normalde main.c doyasındaki 
+  main() fonksiyonun içerisindedir.
   
+  Örnek Kullanımı:
+    
+     void vAFunction( void )
+     {
+         // Tasks can be created before or after starting the RTOS scheduler
+         xTaskCreate( vTaskCode,
+                      "NAME",
+                      STACK_SIZE,
+                      NULL,
+                      tskIDLE_PRIORITY,
+                      NULL );
+
+         // Start the real time scheduler.
+         vTaskStartScheduler();
+
+         // Will not get here unless there is insufficient RAM.
+     }
+     
+   vTaskEndScheduler: Örnek kullanımı aşağıda gösterilmiştir.
+    void vTaskEndScheduler( void );
+   Not: Bu yalnızca x86 gerçek mod pc port'ları için kullanılabilmektedir.
+   RTOS kernel tick'ini durdurur. Bütün yaratılan task'lar otomatik olarak silinecektir ve 
+   multitasking (ya preemptive yada cooperative) duracaktır.
+   Çalışma sanki vTaskStartScheduler()'den geri dönülmüş gibi vTaskStartScheduler()'nin çağırıldığı noktadan çalışmaya
+   devam eder.
+   vTaskEndScheduler() kullanımına bir örnek olması için demo/PC dizinindeki main.c demo uygulama doyasına bakınız.
+   vTaskEndScheduler() port edilebilir katman içerisinde tanımlanmak için bir çıkış fonksiyonuna(exit function) ihtiyaç
+   duymaktadır( PC port için olan port. c içerisindeki vPortEndScheduler()'e bakınız).
+   Bu, RTOS kernel tick'in durdurulması gibi donanıma özel operasyonları yerine getirir.
+   vTaskEndScheduler() RTOS kerneli tarafından atanan bütün kaynakların serbest bırakılmasına neden olacaktır - fakat uygulama
+   task'lar tarafından atanan kaynakları serbest bırakmayacaktır.
+   
+   Örnek Kullanım: 
+   
+   void vTaskCode( void * pvParameters )
+   {
+       for( ;; )
+       {
+           // Task code goes here.
+
+           // At some point we want to end the real time kernel processing 
+           // so call ...
+           vTaskEndScheduler ();
+       }
+   }
+
+   void vAFunction( void )
+   {
+       // Create at least one task before starting the RTOS kernel.
+       xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );
+
+       // Start the real time kernel with preemption.
+       vTaskStartScheduler();
+
+       // Will only get here when the vTaskCode () task has called 
+       // vTaskEndScheduler ().  When we get here we are back to single task 
+       // execution.
+   }
   
+  vTaskSuspendAll: Örnek kullanımı aşağıda gösterilmiştir.
+    void vTaskSuspendAll( void );
   
   
   
