@@ -1069,7 +1069,7 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
     BaseType_t xTaskResumeAll( void );
   vTaskSuspendAll() çağırılarak kullanılmasıyla askıya alındıktan sonra scheduler'in çalışmaya devam ettirir.
   
-  xTaskResumeAll:
+  xTaskResumeAll: 
   
   
   
