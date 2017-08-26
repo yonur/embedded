@@ -1016,8 +1016,7 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
 
    void vAFunction( void )
    {
-       // Create at least one task before starting the RTOS kernel.
-       xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );
+       // Create at least one task before starting the RTOS kernel.veril       xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );
 
        // Start the real time kernel with preemption.
        vTaskStartScheduler();
@@ -1069,7 +1068,11 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
     BaseType_t xTaskResumeAll( void );
   vTaskSuspendAll() çağırılarak kullanılmasıyla askıya alındıktan sonra scheduler'in çalışmaya devam ettirir.
   
-  xTaskResumeAll: Örnek kullanımı aşağıda  
+  xTaskResumeAll: Örnek kullanımı aşağıda verilmiştir:
+  
+    BaseType_t xTaskResumeAll( void );
+    
+    
   
   
   
