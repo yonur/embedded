@@ -1024,7 +1024,8 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
        // Will only get here when the vTaskCode () task has called 
        // vTaskEndScheduler ().  When we get here we are back to single task 
        // execution.
-   }
+
+}
   
   vTaskSuspendAll: Örnek kullanımı aşağıda gösterilmiştir.
     void vTaskSuspendAll( void );
@@ -1064,16 +1065,117 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
        }
    }
  
-  xTaskResumeAll: Örnek kullanımı aşağıda gösterilmiştir: 
-    BaseType_t xTaskResumeAll( void );
-  vTaskSuspendAll() çağırılarak kullanılmasıyla askıya alındıktan sonra scheduler'in çalışmaya devam ettirir.
-  
   xTaskResumeAll: Örnek kullanımı aşağıda verilmiştir:
-  
     BaseType_t xTaskResumeAll( void );
-    
-    
+  Bu fonksiyon daha öncesinde xTaskSuspend() çağırılarak askıya alınmış scheduler'in tekrar başlamasını sağlamaktadır.
+  Geri Dönüş Değerleri: Eğer scheduler'in tekrar başlaması bir cnotext switch'e neden oluyorsa  pdTRUE geri dönmektedir, aksi 
+  halde pdFALSE geri dönmektedir.
+  Örnek Kullanım: 
   
+  void vTask1( void * pvParameters )
+   {
+       for( ;; )
+       {
+           /* Task code goes here. */
+
+           /* ... */
+
+           /* At some point the task wants to perform a long operation
+           during which it does not want to get swapped out.  It cannot
+           use taskENTER_CRITICAL ()/taskEXIT_CRITICAL () as the length
+           of the operation may cause interrupts to be missed -
+           including the ticks.
+
+           Prevent the RTOS kernel swapping out the task. */
+           vTaskSuspendAll();
+
+           /* Perform the operation here.  There is no need to use critical
+           sections as we have all the microcontroller processing time.
+           During this time interrupts will still operate and the real
+           time RTOS kernel tick count will be maintained. */
+
+           /* ... */
+
+           /* The operation is complete.  Restart the RTOS kernel.  We want to force
+           a context switch - but there is no point if resuming the scheduler
+           caused a context switch already. */
+           if( !xTaskResumeAll () )
+           {
+                taskYIELD ();
+           }
+       }
+   }
+
+  vTaskStepTick: Örnek tanımlama şekli aşağıda gösterilmiştir:
+    void vTaskStepTick( TickType_t xTicksToJump );
+  Eğer RTOS tickless idle functionality'i kullanacak şekilde konfigüre edildiyse, tick interrupt duracaktır, ve idle task çalışabilecek
+  tek task olduğunda mikrokontrolör düşük güç durumuna geçmektedir. Düşük güç durumundan çıktıktan sonra, 
+  durdurulduğunda geçen süreyi hesaba katmak için tick count değeri düzeltilmelidir.
+  Eğer FreeRTOS portu bir varsayılan  portSUPPRESS_TICKS_AND_SLEEP() uygulaması içeriyorsa, vTaskStepTick() doğru tick count değerinin devamının
+  sağlanması için dahili olarak kullanılır. vTaskStepTick() API fonksiyonu varsayılan portSUPPRESS_TICKS_AND_SLEEP() uygulamasının iptal edilmesine
+  ve eğer kullanılan port varsayılan bir sağlamıyorsa portSUPPRESS_TICKS_AND_SLEEP() için bir tane sağlanmasına izin vermektedir.
+  configUSE_TICKLESS_IDLE konfigürasyon sabiti erişilebilir olan vTaskStepTick için 1 olarak ayarlanmalıdır.
+  Parametreler: xTicksToJump: Tick interrupt durdurulduğundan bu yana geçen RTOS tick'lerinin sayısıdır. Doğru bir çalışma parametresi olması için 
+  portSUPPRESS_TICKS_AND_SLEEP() parametresine eşit yada daha az olmalıdır.
+  Geri Dönüş Değerleri: Yoktur.
+  Örnek Kulllanımı: 
+  
+  Örnek çeşitli fonksiyonlara yapılan çağrıları göstermektedir. Yalnızca vTaskStepTick() FreeRTOS API'sinin bir parçasıdır.
+  Clock'lara ve donanım kullanımında erişilebilir olan güç tasarruf modlarına,, ve bunun gibilere, özgü diğer fonksiyonlar, 
+  uygulamayı kodlayan tarafından sağlanmalıdır.
+  
+  /* First define the portSUPPRESS_TICKS_AND_SLEEP().  The parameter is the time,
+  in ticks, until the kernel next needs to execute. */
+  #define portSUPPRESS_TICKS_AND_SLEEP( xIdleTime ) vApplicationSleep( xIdleTime )
+
+  /* Define the function that is called by portSUPPRESS_TICKS_AND_SLEEP(). */
+  void vApplicationSleep( TickType_t xExpectedIdleTime )
+  {
+  unsigned long ulLowPowerTimeBeforeSleep, ulLowPowerTimeAfterSleep;
+
+      /* Read the current time from a time source that will remain operational
+      while the microcontroller is in a low power state. */
+      ulLowPowerTimeBeforeSleep = ulGetExternalTime();
+
+      /* Stop the timer that is generating the tick interrupt. */
+      prvStopTickInterruptTimer();
+
+      /* Configure an interrupt to bring the microcontroller out of its low power
+      state at the time the kernel next needs to execute.  The interrupt must be
+      generated from a source that is remains operational when the microcontroller
+      is in a low power state. */
+      vSetWakeTimeInterrupt( xExpectedIdleTime );
+
+      /* Enter the low power state. */
+      prvSleep();
+
+      /* Determine how long the microcontroller was actually in a low power state
+      for, which will be less than xExpectedIdleTime if the microcontroller was
+      brought out of low power mode by an interrupt other than that configured by
+      the vSetWakeTimeInterrupt() call.  Note that the scheduler is suspended
+      before portSUPPRESS_TICKS_AND_SLEEP() is called, and resumed when
+      portSUPPRESS_TICKS_AND_SLEEP() returns.  Therefore no other tasks will
+      execute until this function completes. */
+      ulLowPowerTimeAfterSleep = ulGetExternalTime();
+
+      /* Correct the kernels tick count to account for the time the microcontroller
+      spent in its low power state. */
+      vTaskStepTick( ulLowPowerTimeAfterSleep – ulLowPowerTimeBeforeSleep );
+
+      /* Restart the timer that is generating the tick interrupt. */
+      prvStartTickInterruptTimer();
+  }
+  
+  ----------------------------------------------------------------------------------------------------------------------
+                                              TASK UTILITIES
+  uxTaskGetSystemState: Örnek tanımlaması aşağıda verilmiştir:
+    UBaseType_t uxTaskGetSystemState(TaskStatus_t * const pxTaskStatusArray, const UBaseType_t uxArraySize, unsigned long * const pulTotalRunTime );
+  uxTaskGetSystemState()'nin erişilebilir olabilmesi için FreeRTOSConfig.h dosyasındaki configUSE_TRACE_FACILITY 1 olarak ayarlanmalıdır.
+  uxTaskGetSystemState() sistemdeki her bir task için bir TaskStatus_t yapısını yerleştirir. TaskStatus_t  yapısı diğer şeylerin yanısıra
+  task handle, task state ve task tarafından tüketilen toplam çalışma zamanı için üyeler içermektedir.
+  Bu fonksiyonun bütün ask'lar yerine her bir task için ayrı ayrı TaskStatus_t yapısı yerleştiren versionu için vTaskGetInfo()'a bakınız.
+  Not: Bu işlevin, hata ayıklama işlemi için yalnızca scheduler'in uzun süre askıya alınmış olarak kullandığı 
+  durum için kullanılması amaçlanmıştır.
   
   
   
