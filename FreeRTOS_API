@@ -1197,12 +1197,11 @@ unsigned long ulLowPowerTimeBeforeSleep, ulLowPowerTimeAfterSleep;
   vTaskGetInfo()'ya da bakınız.
   Geri Dönüş Değerleri: Aşağıdaki tablo eTaskGetState()'in geri döneceği 
   xTask parametresinin olabileceği her bir durum için refere edebileceği task değerini listelemektedir.
-  State 
-Returned Value 
-Ready eReady 
-Running eRunning (the calling task is querying its own priority) 
-Blocked eBlocked 
-Suspended eSuspended 
-Deleted eDeleted (the tasks TCB is waiting to be cleaned up) 
+  STATE     RETURNED VALUE 
+  Ready     eReady 
+  Running   eRunning (the calling task is querying its own priority) 
+  Blocked   eBlocked 
+  Suspended eSuspended 
+  Deleted   eDeleted (the tasks TCB is waiting to be cleaned up) 
   
   
