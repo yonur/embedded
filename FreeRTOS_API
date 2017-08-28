@@ -1131,7 +1131,9 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   /* Define the function that is called by portSUPPRESS_TICKS_AND_SLEEP(). */
   void vApplicationSleep( TickType_t xExpectedIdleTime )
   {
-  unsigned long ulLowPowerTimeBeforeSleep, ulLowPowerTimeAfterSleep;
+
+
+unsigned long ulLowPowerTimeBeforeSleep, ulLowPowerTimeAfterSleep;
 
       /* Read the current time from a time source that will remain operational
       while the microcontroller is in a low power state. */
@@ -1178,6 +1180,29 @@ Bu methodlar, generic method ve bu porta özel olan methoddur.
   durum için kullanılması amaçlanmıştır.
   
   
+  xTaskGetCurrentTaskHandle: Örnek kullanımı aşağıda verilmiştir:
+    TaskHandle_t xTaskGetCurrentTaskHandle( void );
+  Bu fonksiyonun erişilebilir olması için INCLUDE_xTaskGetCurrentTaskHandle 1 olarak ayarlanmalıdır.
+  Geri Dönüş Değerleri: Şu anda çalışan(çağırılan) task'ın handle'ıdır.
   
+  xTaskGetIdleTaskHandle: Örnek kullanımı aşağıda verilmiştir:
+    TaskHandle_t xTaskGetIdleTaskHandle( void );
+  Bu fonksiyonun erişilebilir olması için INCLUDE_xTaskGetIdleTaskHandle  1 olarak ayarlanmalıdır.
+  Geri Dönüş Değerleri: Task Handle, Idle Task ile ilişkilidir. RTOS scheduler başlatıldığında Idle Task otomatik olarak yaratılır.
+  
+  eTaskGetState: Örnek tanımlanması aşağıda verilmiştir:
+    eTaskState eTaskGetState( TaskHandle_t xTask );
+  eTaskGetState() çalıştığında oluşan task'ın içerisindeki enumerated tipi geri dönmektedir.
+  eTaskGetState()'nin erişilebilir olması için FreeRTOSConfig.h dosyasındaki INCLUDE_eTaskGetState 1 olarak ayarlanmalıdır.
+  vTaskGetInfo()'ya da bakınız.
+  Geri Dönüş Değerleri: Aşağıdaki tablo eTaskGetState()'in geri döneceği 
+  xTask parametresinin olabileceği her bir durum için refere edebileceği task değerini listelemektedir.
+  State 
+Returned Value 
+Ready eReady 
+Running eRunning (the calling task is querying its own priority) 
+Blocked eBlocked 
+Suspended eSuspended 
+Deleted eDeleted (the tasks TCB is waiting to be cleaned up) 
   
   
