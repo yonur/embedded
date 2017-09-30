@@ -10,3 +10,5 @@ https://www.keil.com/demo/eval/armv4.htm
 
 Bit işleminde aynı kalmasını istediğin biti 0 ile değişmesini istediğin biti 1 ile EXOR' la.
 https://eewiki.net/display/microcontroller/Measuring+Phase+Offset+Using+a+Microcontroller
+
+http://www.st.com/en/evaluation-tools/32f746gdiscovery.html
