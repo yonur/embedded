@@ -1,1 +1,187 @@
 Bu adam çözmüş: Marco Lintik
+
+/******************************************************************************
+
+                            Online C Compiler.
+                Code, Compile, Run and Debug C program online.
+Write your code in this editor and press "Run" button to compile and execute it.
+
+*******************************************************************************/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct arr_string {
+
+    int size;
+    
+    char *arr;
+    
+} arr_string;
+
+arr_string alloc_arrString (int len) {
+    
+    arr_string a = {len, len > 0 ? malloc(sizeof(arr_string) * len) : NULL};
+    
+}
+
+struct Queue {
+    
+    int front, rear, size;
+    
+    unsigned capacity;
+    
+    char **str_arr;
+    
+};
+
+//Yeni bir queue olusturacak methodu yaz
+//Queue structurenın ihtiyac duydugu alan kadar bir alani ata bu queueya
+//frontun indeksi ve size baslangicta 0 olacak cunku henuz eleman yok
+//rear basta capacity - 1 olacak cunku arrayın son elemanı toplam boyuttan 1 eksik tir yani 10 elemanlı dizinin son elemanı 9 dur
+//Bunun faydası enqueu methodunda gorulecektir
+//str arrayın boyutu atanacak
+struct Queue* createQueue(unsigned capacity) {
+    
+    struct Queue* queue = (struct Queue *)malloc(sizeof(struct Queue));
+    
+    queue->str_arr = (char **)malloc(sizeof(char *)*capacity);
+    
+    queue->size = queue->front = 0;
+    
+    queue->rear = capacity - 1;
+    
+    return queue;
+    
+}
+
+int isFull(struct Queue* queue) {
+    
+    return(queue->size == queue->capacity);
+    
+}
+
+int isEmpty(struct Queue* queue) {
+    
+    return(queue->size == 0);
+    
+}
+
+void enqueu(struct Queue* queue, char* str) {
+    
+    if(isFull(queue))
+        return;
+    
+    queue->rear = (queue->rear + 1)%queue->capacity;
+    
+    strcpy(queue->str_arr[queue->rear], str);
+
+}
+
+void dequeu(struct Queue *queue) {
+    
+    if(isEmpty(queue))
+        return;
+    
+    queue->front = (queue->front + 1)%queue->capacity;
+    
+    queue->size = queue->size - 1;
+    
+}
+
+arr_string allLongestStrings(arr_string inputArray) {
+    
+    //Gecici bir Queue elemanı olustur
+    //inputArrayın cahr arrayını taramaya basla. Oncelikle ilk eleman en buyuk olsun. 
+    //Eger daha mevcut indexdeki ve onceki butun elemanları sil. Bu elemanı queueya ekle. 
+    //Eger mevcut eleman ile esit uzunluktuysa sadece queueya ekle.
+    struct Queue* new_queue = createQueue(10);
+    
+    //Basta queuenun ilk elemanı sadece null karakter alır
+    enqueu(new_queue, " ");
+    
+    //quenun
+    int c_index = 0;
+    
+    for(int i = 0; i < inputArray.size; i++) {
+        
+        if(strlen(inputArray.arr[i]) > strlen(new_queue->str_arr[new_queue->size])) {
+               
+          //  c_index++;
+            
+            enqueu(new_queue, inputArray.arr[i]);
+            
+            for(int j = (new_queue->size - 2); j >= 0; j--) {
+                
+                    dequeu(new_queue);
+                
+            }
+            
+            //c_index = 1;
+            
+        }else if(strlen(inputArray.arr[i]) == strlen(new_queue->str_arr[new_queue->size])) {
+            
+            //c_index++;
+            
+            enqueu(new_queue, inputArray.arr[i]);
+            
+        }
+            
+    }   
+   
+    int temp_size = inputArray.size;
+//    inputArray.size = new_queue->size;
+    if(temp_size > new_queue->size) {
+        
+    
+        for(int i = 0; i < new_queue->size; i++) {
+        
+            strcpy(inputArray.arr[i], new_queue->str_arr[i]);
+            
+        }
+        
+    }else if(temp_size <= new_queue->size) {
+        
+        for(int i = 0; i < new_queue->size; i++) {
+            
+            strcpy(inputArray.arr[i], new_queue->str_arr[i]);
+            
+        }
+    }
+    
+    inputArray.size = new_queue->size;
+    
+    free(new_queue);
+    
+    return inputArray;
+    
+}
+
+
+int main()
+{
+    
+    arr_string inputArray;
+    
+    inputArray.arr[5] = {"aba", "aa", "ad", "vcd", "aba"};
+    
+    inputArray.size = 5;
+    
+    for(int i = 0; i < inputArray.size; i++) {
+        
+        printf("Stings: %s \n", inputArray.arr[i]);
+        
+    }
+    
+    allLongestStrings(inputArray);
+    
+    for(int i = 0; i < inputArray.size; i++) {
+        
+        printf("Stings: %s \n", inputArray.arr[i]);
+        
+    }
+    
+    return 0;
+}
+
