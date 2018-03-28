@@ -1,6 +1,7 @@
 Answers Link: https://github.com/cnoviello/mastering-stm32/tree/master/nucleo-l476RG/src
 
 Evdeki VirtualComSeriPort örneğinin ayarları:
+UART haberleşmesi için
 
 USB_DEVICE = Class For FS IP -> Communication Device Class
 RCC = High Speed Clock -> BYPASS Clock Source
@@ -10,3 +11,5 @@ SYS = Debug -> Serial Wire
 USART3 = Mode -> Async..
 USB_OTG_FS = Mode -> Device Only 
              Activate_SOF ve Activate_VBUS kutucukları  tiklenmiş.
+
+--------------------------------------------------------------------------
